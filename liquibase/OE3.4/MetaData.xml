@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+<changeSet author="paulsc" id="1">
+    <comment>Deactivates existing payment options and adds new ones</comment>
+    <update tableName="dictionary" >
+        <column name="is_active" value="N" />
+        <where>dictionary_category_id = ( select id from clinlims.dictionary_category where description = 'patientPayment' )</where>
+    </update>
+    <insert tableName="dictionary" schemaName="clinlims">
+        <column name="id" valueNumeric=" nextval( 'dictionary_seq' ) "/>
+        <column name="is_active" value="Y" />
+        <column name="dict_entry" value="normalCash" />
+        <column name="lastupdated" value="  now() " />
+        <column name="dictionary_category_id" valueNumeric=" (select id from clinlims.dictionary_category where name = 'patientPayment') " />
+        <column name="display_key" value="dictionary.patient.payment.normal.cash" />
+    </insert>
+    <insert tableName="dictionary" schemaName="clinlims">
+        <column name="id" valueNumeric=" nextval( 'dictionary_seq' ) "/>
+        <column name="is_active" value="Y" />
+        <column name="dict_entry" value="reducedCash" />
+        <column name="lastupdated" value="  now() " />
+        <column name="dictionary_category_id" valueNumeric=" (select id from clinlims.dictionary_category where name = 'patientPayment') " />
+        <column name="display_key" value="dictionary.patient.payment.reduced.cash" />
+    </insert>
+    <insert tableName="dictionary" schemaName="clinlims">
+        <column name="id" valueNumeric=" nextval( 'dictionary_seq' ) "/>
+        <column name="is_active" value="Y" />
+        <column name="dict_entry" value="normalInsurance" />
+        <column name="lastupdated" value="  now() " />
+        <column name="dictionary_category_id" valueNumeric=" (select id from clinlims.dictionary_category where name = 'patientPayment') " />
+        <column name="display_key" value="dictionary.patient.payment.normal.insurance" />
+    </insert>
+    <insert tableName="dictionary" schemaName="clinlims">
+        <column name="id" valueNumeric=" nextval( 'dictionary_seq' ) "/>
+        <column name="is_active" value="Y" />
+        <column name="dict_entry" value="reducedInsurance" />
+        <column name="lastupdated" value="  now() " />
+        <column name="dictionary_category_id" valueNumeric=" (select id from clinlims.dictionary_category where name = 'patientPayment') " />
+        <column name="display_key" value="dictionary.patient.payment.reduced.insurance" />
+    </insert>
+</changeSet>
+<changeSet id="2" author="paulsc">
+    <comment>Add notes section to site configuration</comment>
+    <insert tableName="site_information">
+        <column name="id" valueNumeric=" nextval( 'site_information_seq' ) " />
+        <column name="name" value="validationOnlyNotesAreExternal" />
+        <column name="lastupdated" valueDate=" now() " />
+        <column name="description" value="If true note are internal except validation" />
+        <column name="value" value="false" />
+        <column name="domain_id" valueNumeric=" (select id from clinlims.site_information_domain where name = 'hiddenProperties' ) " />
+        <column name="value_type" value="boolean" />
+    </insert>
+</changeSet>
+<changeSet id="3" author="paulsc">
+    <comment>Sets all note types to external</comment>
+    <update tableName="note" >
+        <column name="note_type" value="E" />
+    </update>
+</changeSet>
+<changeSet id="4" author="paulsc">
+    <comment>Adds configurable phone format</comment>
+    <insert tableName="site_information">
+        <column name="id" valueNumeric=" nextval( 'site_information_seq' ) " />
+        <column name="name" value="phone format" />
+        <column name="lastupdated" valueDate=" now() " />
+        <column name="description" value="The acceptable format for a phone number" />
+        <column name="value" value="(ddd) dddd-dddd" />
+        <column name="domain_id" valueNumeric=" (select id from clinlims.site_information_domain where name = 'siteIdentity' ) " />
+        <column name="value_type" value="text" />
+        <column name="tag" value="numericOnly" />
+        <column name="instruction_key" value="instructions.site.phone" />
+    </insert>
+</changeSet>
+    <changeSet id="5" author="paulsc">
+        <comment>Adds configurable phone format validation</comment>
+        <insert tableName="site_information">
+            <column name="id" valueNumeric=" nextval( 'site_information_seq' ) " />
+            <column name="name" value="validate phone format" />
+            <column name="lastupdated" valueDate=" now() " />
+            <column name="description" value="Should the format for a phone number be validated" />
+            <column name="value" value="true" />
+            <column name="domain_id" valueNumeric=" (select id from clinlims.site_information_domain where name = 'siteIdentity' ) " />
+            <column name="value_type" value="boolean" />
+            <column name="instruction_key" value="instructions.site.phone.validation" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>
