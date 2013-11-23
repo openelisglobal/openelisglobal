@@ -16,20 +16,9 @@
  */
 package us.mn.state.health.lims.common.services;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.validator.GenericValidator;
-
-import us.mn.state.health.lims.common.util.ConfigurationProperties;
+import us.mn.state.health.lims.common.util.*;
 import us.mn.state.health.lims.common.util.ConfigurationProperties.Property;
-import us.mn.state.health.lims.common.util.IdValuePair;
-import us.mn.state.health.lims.common.util.StringUtil;
-import us.mn.state.health.lims.dictionary.dao.DictionaryDAO;
 import us.mn.state.health.lims.dictionary.daoimpl.DictionaryDAOImpl;
 import us.mn.state.health.lims.dictionary.valueholder.Dictionary;
 import us.mn.state.health.lims.gender.daoimpl.GenderDAOImpl;
@@ -48,9 +37,13 @@ import us.mn.state.health.lims.typeofsample.dao.TypeOfSampleDAO;
 import us.mn.state.health.lims.typeofsample.daoimpl.TypeOfSampleDAOImpl;
 import us.mn.state.health.lims.typeofsample.valueholder.TypeOfSample;
 
-public class DisplayListService {
+import java.util.*;
 
-	public enum ListType {
+public class DisplayListService implements LocaleChangeListener {
+
+    private static DisplayListService instance = new DisplayListService();
+
+    public enum ListType {
 		HOURS, 
 		MINS, 
 		SAMPLE_TYPE, 
@@ -58,6 +51,7 @@ public class DisplayListService {
 		SAMPLE_PATIENT_PRIMARY_ORDER_TYPE, 
 		SAMPLE_PATIENT_FOLLOW_UP_PERIOD_ORDER_TYPE, 
 		SAMPLE_PATIENT_INITIAL_PERIOD_ORDER_TYPE, 
+        SAMPLE_PATIENT_PAYMENT_OPTIONS,
 		PATIENT_HEALTH_REGIONS, 
 		PATIENT_MARITAL_STATUS, 
 		PATIENT_NATIONALITY, 
@@ -67,35 +61,79 @@ public class DisplayListService {
 		QA_EVENTS,
 		TEST_SECTION,
 		HAITI_DEPARTMENTS
-	};
+	}
 
 	private static Map<ListType, List<IdValuePair>> typeToListMap = new HashMap<ListType, List<IdValuePair>>();
+    private static Map<String, List<IdValuePair>> dictionaryToListMap = new HashMap<String, List<IdValuePair>>( );
 
 	static {
 		typeToListMap.put(ListType.HOURS, createHourList());
 		typeToListMap.put(ListType.MINS, createMinList());
 		typeToListMap.put(ListType.SAMPLE_TYPE, createSampleTypeList());
-		typeToListMap.put(ListType.INITIAL_SAMPLE_CONDITION, createInitialSampleConditionList());
-		typeToListMap.put(ListType.SAMPLE_PATIENT_PRIMARY_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimary"));
+        typeToListMap.put(ListType.INITIAL_SAMPLE_CONDITION, createFromDictionaryCategory("specimen reception condition"));
+        typeToListMap.put(ListType.SAMPLE_PATIENT_PRIMARY_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimary"));
 		typeToListMap.put(ListType.SAMPLE_PATIENT_FOLLOW_UP_PERIOD_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimaryHIV_follow_up"));
 		typeToListMap.put(ListType.SAMPLE_PATIENT_INITIAL_PERIOD_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimaryHIV_initial"));
-		typeToListMap.put(ListType.PATIENT_HEALTH_REGIONS,creatPatientHealthRegions());
+		typeToListMap.put(ListType.PATIENT_HEALTH_REGIONS,createPatientHealthRegions());
 		typeToListMap.put(ListType.PATIENT_MARITAL_STATUS,createFromDictionaryCategory("Marital Status Demographic Information"));
 		typeToListMap.put(ListType.PATIENT_NATIONALITY,createFromDictionaryCategory("Nationality Demographic Information"));
 		typeToListMap.put(ListType.PATIENT_EDUCATION,createFromDictionaryCategory("Education Level Demographic Information"));
-		typeToListMap.put(ListType.GENDERS, createGenderList());
+        typeToListMap.put(ListType.GENDERS, createGenderList());
 		typeToListMap.put(ListType.SAMPLE_PATIENT_REFERRING_CLINIC,	createReferringClinicList());
-		typeToListMap.put(ListType.QA_EVENTS, createSortedQAEvents());
-		typeToListMap.put(ListType.TEST_SECTION, createTestSectionList());
+        typeToListMap.put(ListType.QA_EVENTS, createSortedQAEvents());
+        typeToListMap.put(ListType.TEST_SECTION, createTestSectionList());
 		typeToListMap.put(ListType.HAITI_DEPARTMENTS, createAddressDepartmentList());
+        typeToListMap.put(ListType.SAMPLE_PATIENT_PAYMENT_OPTIONS, createFromDictionaryCategory("patientPayment"));
+
+        SystemConfiguration.getInstance().addLocalChangeListener(instance);
 	}
 
-	public static List<IdValuePair> getList(ListType listType) {
+    @Override
+    public void localeChanged(String locale) {
+        //refreshes those lists which are dependent on local
+        typeToListMap.put(ListType.SAMPLE_TYPE, createSampleTypeList());
+        typeToListMap.put(ListType.INITIAL_SAMPLE_CONDITION, createFromDictionaryCategory("specimen reception condition"));
+        typeToListMap.put(ListType.SAMPLE_PATIENT_PRIMARY_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimary"));
+        typeToListMap.put(ListType.SAMPLE_PATIENT_FOLLOW_UP_PERIOD_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimaryHIV_follow_up"));
+        typeToListMap.put(ListType.SAMPLE_PATIENT_INITIAL_PERIOD_ORDER_TYPE,createSamplePatientOrderType("samplePatientEntryPrimaryHIV_initial"));
+        typeToListMap.put(ListType.PATIENT_HEALTH_REGIONS,createPatientHealthRegions());
+        typeToListMap.put(ListType.PATIENT_MARITAL_STATUS,createFromDictionaryCategory("Marital Status Demographic Information"));
+        typeToListMap.put(ListType.PATIENT_NATIONALITY,createFromDictionaryCategory("Nationality Demographic Information"));
+        typeToListMap.put(ListType.PATIENT_EDUCATION,createFromDictionaryCategory("Education Level Demographic Information"));
+        typeToListMap.put(ListType.GENDERS, createGenderList());
+        typeToListMap.put(ListType.QA_EVENTS, createSortedQAEvents());
+        typeToListMap.put(ListType.TEST_SECTION, createTestSectionList());
+        typeToListMap.put(ListType.SAMPLE_PATIENT_PAYMENT_OPTIONS, createFromDictionaryCategory("patientPayment"));
+        dictionaryToListMap = new HashMap<String, List<IdValuePair>>( );
+    }
+
+    public static List<IdValuePair> getList(ListType listType) {
 		return typeToListMap.get(listType);
 	}
 
+    public static List<IdValuePair> getDictionaryListByCategory(String category) {
+       List<IdValuePair> list = dictionaryToListMap.get( category );
+        if( list == null){
+            list = createDictionaryListForCategory( category );
+            if( !list.isEmpty()){
+                dictionaryToListMap.put(category, list);
+            }
+        }
 
-	public static List<IdValuePair> getFreshList(ListType listType) {
+        return list;
+    }
+
+    private static List<IdValuePair> createDictionaryListForCategory( String category ){
+        List<IdValuePair> list = new ArrayList<IdValuePair>( );
+        List<Dictionary> dictionaryList = new DictionaryDAOImpl().getDictionaryEntrysByCategory("categoryName", category, false);
+        for( Dictionary dictionary : dictionaryList){
+            list.add( new IdValuePair( dictionary.getId(), dictionary.getLocalizedName()  ) );
+        }
+
+        return list;
+    }
+
+    public static List<IdValuePair> getFreshList(ListType listType) {
 		// note this should be expanded but the only use case we have is for
 		// referring clinics
 		switch (listType) {
@@ -112,7 +150,7 @@ public class DisplayListService {
 		List<IdValuePair> requesterList = new ArrayList<IdValuePair>();
 
 		OrganizationDAO organizationDAO = new OrganizationDAOImpl();
-		List<Organization> orgList = organizationDAO.getOrganizationsByTypeName("shortName", "referring clinic");
+		List<Organization> orgList = organizationDAO.getOrganizationsByTypeName("shortName", RequesterService.REFERRAL_ORG_TYPE );
 
 		for (Organization organization : orgList) {
 			if (GenericValidator.isBlankOrNull(organization.getShortName())) {
@@ -149,13 +187,13 @@ public class DisplayListService {
 		Collections.sort(dictionaryList, new Comparator<IdValuePair>() {
 			@Override
 			public int compare(IdValuePair o1, IdValuePair o2) {
-				return Integer.parseInt(o1.getId()) - Integer.parseInt(o2.getId());
+                return (int)(Long.parseLong(o1.getId()) - Long.parseLong(o2.getId()));
 			}
 		});
 		return dictionaryList;
 	}
 
-	private static List<IdValuePair> creatPatientHealthRegions() {
+	private static List<IdValuePair> createPatientHealthRegions() {
 		List<IdValuePair> regionList = new ArrayList<IdValuePair>();
 		List<Organization> orgList = new OrganizationDAOImpl().getOrganizationsByTypeName("id", "Health Region");
 		for (Organization org : orgList) {
@@ -174,25 +212,6 @@ public class DisplayListService {
 		}
 
 		return orderTypeList;
-	}
-
-	private static List<IdValuePair> createInitialSampleConditionList() {
-		List<IdValuePair> conditionList = new ArrayList<IdValuePair>();
-		DictionaryDAO dictionaryDAO = new DictionaryDAOImpl();
-		// The category is by local_abbrev
-		List<Dictionary> conditionDictionaryList = dictionaryDAO.getDictionaryEntrysByCategory("reciptCond");
-
-		Collections.sort(conditionDictionaryList, new Comparator<Dictionary>() {
-			@Override
-			public int compare(Dictionary o1, Dictionary o2) {
-				return (int) (Long.parseLong(o1.getId()) - Long.parseLong(o2.getId()));
-			}});
-
-		for (Dictionary dictionary : conditionDictionaryList) {
-			conditionList.add(new IdValuePair(dictionary.getId(), dictionary.getLocalizedName()));
-		}
-
-		return conditionList;
 	}
 
 	private static List<IdValuePair> createSampleTypeList() {

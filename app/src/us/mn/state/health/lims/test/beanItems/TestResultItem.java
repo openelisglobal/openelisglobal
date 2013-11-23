@@ -17,13 +17,13 @@
 */
 package us.mn.state.health.lims.test.beanItems;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import us.mn.state.health.lims.common.util.IdValuePair;
 import us.mn.state.health.lims.result.action.util.ResultItem;
 import us.mn.state.health.lims.result.valueholder.Result;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestResultItem implements ResultItem, Serializable{
 
@@ -47,7 +47,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	@SuppressWarnings("unused")
 	private static String YES = "yes";
 
-	public enum Method{ DNA, MANUAL, AUTO; }
+    public enum Method{ DNA, MANUAL, AUTO; }
 	public enum ResultDisplayType { TEXT, POS_NEG, POS_NEG_IND, HIV, SYPHILIS; }
 
 	private String sampleSource;
@@ -93,10 +93,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	private boolean valid = true;
 	private boolean normal = true;
 	private boolean notIncludedInWorkplan = false;
-	private int reflexStep = 0;
 	private boolean isUserChoiceReflex = false;
-	private boolean userChoicePending;
-	private String reflexSelectionId;
 	private String siblingReflexKey;
 	private String thisReflexKey;
 	private boolean readOnly = false;
@@ -119,6 +116,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	private String qualifiedResultId;
 	private String nextVisitDate;
 	private String forceTechApproval;
+    private String reflexJSONResult;
 	
 	public String getAccessionNumber() {
 		return accessionNumber;
@@ -173,9 +171,13 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setTechnicianSignatureId(String technicianId) {
 		this.technicianSignatureId = technicianId;
 	}
+
+    @Deprecated
 	public String getSupervisorSignatureId() {
 		return supervisorSignatureId;
 	}
+
+    @Deprecated
 	public void setSupervisorSignatureId(String superviserId) {
 		this.supervisorSignatureId = superviserId;
 	}
@@ -280,7 +282,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	}
 
 	public boolean isRemoved(){
-		return remove==NO;
+		return NO.equals( remove );
 	}
 
 /*	public void setTestSortNumber(String testSortNumber) {
@@ -417,12 +419,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	public String getReceivedDate() {
 		return receivedDate;
 	}
-	public void setReflexStep(int reflexStep) {
-		this.reflexStep = reflexStep;
-	}
-	public int getReflexStep() {
-		return reflexStep;
-	}
+
 	public void setResult(Result result) {
 		setResultId(result == null ? "" : result.getId());
 		this.result = result;
@@ -546,18 +543,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setDisplayResultAsLog(boolean displayResultAsLog) {
 		this.displayResultAsLog = displayResultAsLog;
 	}
-	public String getReflexSelectionId() {
-		return reflexSelectionId;
-	}
-	public void setReflexSelectionId(String reflexSelectionId) {
-		this.reflexSelectionId = reflexSelectionId;
-	}
-	public boolean isUserChoicePending() {
-		return userChoicePending;
-	}
-	public void setUserChoicePending(boolean userChoicePending) {
-		this.userChoicePending = userChoicePending;
-	}
+
 	public boolean isNonconforming() {
 		return nonconforming;
 	}
@@ -594,5 +580,12 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setForceTechApproval(String forceTechApproval){
 		this.forceTechApproval = forceTechApproval;
 	}
-	
+
+    public String getReflexJSONResult(){
+        return reflexJSONResult;
+    }
+
+    public void setReflexJSONResult( String reflexJSONResult ){
+        this.reflexJSONResult = reflexJSONResult;
+    }
 }

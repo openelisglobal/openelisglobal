@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+	<!-- Data specific to haiti LNSP -->
+	
+	<changeSet author="paulsc" id="1" context="haitiLNSP">
+		<comment>Change wording of "Indetectable 300"</comment>
+        <sqlFile path="OE3.4/UpdateHaitiLNSPResultName.sql" />
+	</changeSet>
+	<changeSet author="jfurlong" id="2" context="haitiLNSP">
+        <comment>Add unit of measure to Plaquettes test</comment>
+        <sqlFile path="OE3.4/UpdateHaitiLNSPUnitOfMeasure.sql" />
+    </changeSet>
+    <changeSet id="2" author="paulsc" context="haitiLNSP">
+        <comment>Add Stool culture with all it's artifacts</comment>
+        <sqlFile path="OE3.4/HaitiLNSPStoolCulture.sql" />
+    </changeSet>
+    <changeSet id="3" author="paulsc" context="haitiLNSP" >
+        <comment>Adding local abbreviations to dictionary for bacteriology positive results</comment>
+        <sql>
+            update clinlims.dictionary set local_abbrev=trim(leading 'Positive pour ' from dict_entry )
+            where dictionary_category_id = ( select id from clinlims.dictionary_category where description = 'Positive bacteriology results' );
+        </sql>
+    </changeSet>
+    <changeSet id="4" author="paulsc" context="haitiLNSP">
+        <comment>Correct spelling in test catalog</comment>
+        <update tableName="test" >
+            <column name="description" value="Test Rapide Salmonelle typhi IgM 09(Serum)" />
+            <column name="name" value="Test Rapide Salmonelle typhi IgM 09"  />
+            <column name="reporting_description" value="Test Rapide Salmonelle typhi IgM 09" />
+            <column name="local_abbrev" value="Test Rapide Salmonel"  />
+            <where>description = 'Test RapideSalmonelle typhi IgM 09(Serum)'</where>
+        </update>
+    </changeSet>
+    <changeSet id="5" author="paulsc" context="haitiLNSP">
+        <comment>Correct spelling in test catalog</comment>
+        <update tableName="test" >
+            <column name="description" value="Test Rapide Salmonelle typhi IgM 09(Selles)" />
+            <column name="name" value="Test Rapide Salmonelle typhi IgM 09"  />
+            <column name="reporting_description" value="Test Rapide Salmonelle typhi IgM 09" />
+            <column name="local_abbrev" value="Test Rapide Salmonel"  />
+            <where>description = 'Test Rapide Salmonelle typhi  IgM 09(Selles)'</where>
+        </update>
+    </changeSet>
+    <changeSet id="6" author="paulsc" context="haitiLNSP">
+        <comment>Update the spelling of Micobacterium to Mycobacterium</comment>
+        <sqlFile path="OE3.4/HaitiLNSPTestUpdate1.sql" />
+    </changeSet>
+    <changeSet id="7" author="paulsc" context="haitiLNSP">
+        <comment>Move all of Sang Total tests and panels to Sang</comment>
+        <sqlFile path="OE3.4/HaitiLNSPSangTotalToSang.sql" />
+    </changeSet>
+</databaseChangeLog>

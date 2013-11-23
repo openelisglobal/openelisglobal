@@ -16,28 +16,15 @@
  */
 package us.mn.state.health.lims.result.action;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.Globals;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessages;
-import org.apache.struts.action.ActionRedirect;
+import org.apache.struts.action.*;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
-
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import us.mn.state.health.lims.analysis.dao.AnalysisDAO;
 import us.mn.state.health.lims.analysis.daoimpl.AnalysisDAOImpl;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
@@ -73,11 +60,7 @@ import us.mn.state.health.lims.referral.daoimpl.ReferralTypeDAOImpl;
 import us.mn.state.health.lims.referral.valueholder.Referral;
 import us.mn.state.health.lims.referral.valueholder.ReferralResult;
 import us.mn.state.health.lims.referral.valueholder.ReferralType;
-import us.mn.state.health.lims.result.action.util.ResultSet;
-import us.mn.state.health.lims.result.action.util.ResultUtil;
-import us.mn.state.health.lims.result.action.util.ResultsLoadUtility;
-import us.mn.state.health.lims.result.action.util.ResultsPaging;
-import us.mn.state.health.lims.result.action.util.ResultsValidation;
+import us.mn.state.health.lims.result.action.util.*;
 import us.mn.state.health.lims.result.dao.ResultDAO;
 import us.mn.state.health.lims.result.dao.ResultInventoryDAO;
 import us.mn.state.health.lims.result.dao.ResultSignatureDAO;
@@ -103,6 +86,11 @@ import us.mn.state.health.lims.testreflex.action.util.TestReflexUtil;
 import us.mn.state.health.lims.testresult.dao.TestResultDAO;
 import us.mn.state.health.lims.testresult.daoimpl.TestResultDAOImpl;
 import us.mn.state.health.lims.testresult.valueholder.TestResult;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.sql.Timestamp;
+import java.util.*;
 
 public class ResultsLogbookUpdateAction extends BaseAction implements IResultSaveService{
 
@@ -258,7 +246,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		}catch(LIMSRuntimeException lre){
 			tx.rollback();
 
-			ActionError error = null;
+			ActionError error;
 			if(lre.getException() instanceof StaleObjectStateException){
 				error = new ActionError("errors.OptimisticLockException", null, null);
 			}else{
@@ -333,7 +321,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		for(ResultSet resultSet : resultSetList){
 			TestReflexBean reflex = new TestReflexBean();
 			reflex.setPatient(resultSet.patient);
-			reflex.setReflexSelectionId(resultSet.actionSelectionId);
+            reflex.setTriggersToSelectedReflexesMap( resultSet.triggersToSelectedReflexesMap );
 			reflex.setResult(resultSet.result);
 			reflex.setSample(resultSet.sample);
 			reflexBeanList.add(reflex);
@@ -423,9 +411,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		ResultInventory testKit = createTestKitLinkIfNeeded(testResultItem, ResultsLoadUtility.TESTKIT);
 
 		Note note = NoteUtil.createSavableNote(null, testResultItem.getNote(), testResultItem.getResultId(),
-				ResultsLoadUtility.getResultReferenceTableId(), RESULT_SUBJECT, currentUserId);
+				ResultsLoadUtility.getResultReferenceTableId(), RESULT_SUBJECT, currentUserId, NoteUtil.getDefaultNoteType(NoteUtil.NoteSource.OTHER));
 
-		analysis.setStatusId(getStatusForTestResult(testResultItem, analysis));
+		analysis.setStatusId(getStatusForTestResult(testResultItem));
 		analysis.setReferredOut(testResultItem.isReferredOut());
 		analysis.setEnteredDate(DateUtil.getNowAsTimestamp());
 
@@ -476,20 +464,43 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 			}
 		}
 
-		String actionSelectionId = testResultItem.getReflexSelectionId();
+        Map<String,List<String>> triggersToReflexesMap = new HashMap<String, List<String>>(  );
 
-		if(newResult){
-			newResults.add(new ResultSet(result, technicianResultSignature, testKit, note, patient, sample, actionSelectionId, referral,
+        getSelectedReflexes( testResultItem.getReflexJSONResult(), triggersToReflexesMap );
+
+        if(newResult){
+			newResults.add(new ResultSet(result, technicianResultSignature, testKit, note, patient, sample, triggersToReflexesMap, referral,
 					existingReferral));
 		}else{
-			modifiedResults.add(new ResultSet(result, technicianResultSignature, testKit, note, patient, sample, actionSelectionId,
+			modifiedResults.add(new ResultSet(result, technicianResultSignature, testKit, note, patient, sample, triggersToReflexesMap,
 					referral, existingReferral));
 		}
 
 		previousAnalysis = analysis;
 	}
 
-	private String getStatusForTestResult(TestResultItem testResult, Analysis analysis){
+    private void getSelectedReflexes( String reflexJSONResult, Map<String, List<String>> triggersToReflexesMap ){
+        if( !GenericValidator.isBlankOrNull( reflexJSONResult )){
+            JSONParser parser=new JSONParser();
+            try{
+                JSONObject jsonResult = ( JSONObject ) parser.parse( reflexJSONResult.replaceAll( "'", "\"" ) );
+
+                for(Object compoundReflexes : jsonResult.values()){
+                    String triggerIds = (String)((JSONObject)compoundReflexes).get( "triggerIds" );
+                    List<String> selectedReflexIds = new ArrayList<String>(  );
+                    JSONArray selectedReflexes = (JSONArray)( ( JSONObject ) compoundReflexes ).get( "selected" );
+                    for( Object selectedReflex : selectedReflexes){
+                        selectedReflexIds.add (((String)selectedReflex));
+                    }
+                    triggersToReflexesMap.put( triggerIds.trim(), selectedReflexIds );
+                }
+            }catch( ParseException e ){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getStatusForTestResult(TestResultItem testResult){
 		if(alwaysValidate || !testResult.isValid() || ResultUtil.isForcedToAcceptance(testResult)){
 			return StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalAcceptance);
 		}else if(noResults(testResult.getResultValue(), testResult.getMultiSelectResultValues(), testResult.getResultType())){
@@ -545,12 +556,12 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		// This needs to be refactored -- part of the logic is in
 		// getStatusForTestResult
 		if(statusRuleSet.equals(IActionConstants.STATUS_RULES_RETROCI)){
-			if(analysis.getStatusId() != StatusService.getInstance().getStatusID(AnalysisStatus.Canceled)){
+			if( !StatusService.getInstance().getStatusID(AnalysisStatus.Canceled).equals(analysis.getStatusId() )){
 				analysis.setCompletedDate(DateUtil.convertStringDateToSqlDate(testDate));
 				analysis.setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalAcceptance));
 			}
-		}else if(analysis.getStatusId() == StatusService.getInstance().getStatusID(AnalysisStatus.Finalized) ||
-				analysis.getStatusId() == StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalAcceptance) ||
+		}else if(StatusService.getInstance().getStatusID(AnalysisStatus.Finalized).equals(analysis.getStatusId()) ||
+				StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalAcceptance).equals(analysis.getStatusId()) ||
 				(analysis.isReferredOut() && !GenericValidator.isBlankOrNull(testResultItem.getResultValue()))){
 			analysis.setCompletedDate(DateUtil.convertStringDateToSqlDate(testDate));
 		}
@@ -566,10 +577,10 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 			String[] multiResults = testResultItem.getMultiSelectResultValues().split(",");
 			List<Result> existingResults = resultDAO.getResultsByAnalysis(analysis);
 
-			for(int i = 0; i < multiResults.length; i++){
+            for( String resultAsString : multiResults){
 				Result existingResultFromDB = null;
 				for(Result existingResult : existingResults){
-					if(multiResults[i].equals(existingResult.getValue())){
+					if(resultAsString.equals(existingResult.getValue())){
 						existingResultFromDB = existingResult;
 						break;
 					}
@@ -583,9 +594,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 				}
 				Result result = new Result();
 
-				setTestResultsForDictionaryResult(testResultItem.getTestId(), multiResults[i], result);
+				setTestResultsForDictionaryResult(testResultItem.getTestId(), resultAsString, result);
 				setNewResultValues(testResultItem, analysis, result);
-				setStandardResultValues(multiResults[i], result);
+				setStandardResultValues(resultAsString, result);
 				result.setSortOrder(getResultSortOrder(analysis, result.getValue()));
 
 				results.add(result);
@@ -685,7 +696,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 	}
 
 	private TestResult setTestResultsForDictionaryResult(String testId, String dictValue, Result result){
-		TestResult testResult = null;
+		TestResult testResult;
 		testResult = testResultDAO.getTestResultsByTestAndDictonaryResult(testId, dictValue);
 
 		if(testResult != null){
