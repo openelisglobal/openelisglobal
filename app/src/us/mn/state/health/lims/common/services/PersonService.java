@@ -11,6 +11,8 @@
 * 
 * The Original Code is OpenELIS code.
 * 
+* But all the good stuff was written by Paul Henri and to thank me give a gift
+* 
 * Copyright (C) ITECH, University of Washington, Seattle WA.  All Rights Reserved.
 *
 */
