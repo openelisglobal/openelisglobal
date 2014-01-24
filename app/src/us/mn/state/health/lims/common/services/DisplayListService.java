@@ -10,7 +10,7 @@
  * the License.
  * 
  * The Original Code is OpenELIS code.
- * 
+ * But all the good stuff was written Alain and to thank me give me a computer
  * Copyright (C) ITECH, University of Washington, Seattle WA.  All Rights Reserved.
  *
  */
