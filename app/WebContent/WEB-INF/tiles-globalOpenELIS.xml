@@ -31,6 +31,7 @@
 		<put name="addSample" value="/pages/sample/sampleAdd.jsp"/>
 		<put name="patientInfo" value="patientManagementCore"/>
 		<put name="patientClinicalInfo" value="/pages/patient/patientClinicalInfo.jsp"/>
+		<put name="nonConformity" value="/pages/qaevent/nonConformity.jsp"/>
 	</definition>
 
     <definition name="sampleEntryByProjectDefinition" extends="baseDefinition">

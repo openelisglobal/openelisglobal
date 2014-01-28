@@ -497,7 +497,7 @@ function parseSampletypes(sampletypes, SampleTypes) {
             if (!sampleTypeInList) {
                 index++;
                 SampleTypes[index-1] = new SampleType(sampleTypeId, sampleTypeName);
-                sampleTypeMap[sampleTypeId] = SampleTypes[index-1];
+                sampleTypeMap[sampleTypeId] = SampleTypes[-1];
                 SampleTypes[index-1].rowid = index;
                 sampleTypeInList = SampleTypes[index-1];
                                 
@@ -653,14 +653,34 @@ function  processPhoneSuccess(xhr){
 <span class="requiredlabel">*</span>
 
 <div id="samplesDisplay" class="colorFill" style="display:none;" >
+<table>
+<tr style="width:30%">
+ 
+   <td>
+	 <bean:message key="label.refusal.reason" /><span class="requiredlabel"></span>
+	   </td>
+   <td style="width:50%">
+					<html:select styleId="qaEvent" 
+								 name="<%=formName%>"
+						         styleClass="readOnly qaEventElement requiredField" 
+						         property="qaEvent"
+    					         style="width: 99%" 
+						         onchange='makeDirty();'>
+						<option value="0"></option>
+						<html:optionsCollection name="<%=formName%>"
+							property="qaEventTypes" label="value" value="id" />
+					</html:select>
+   </td>
+</tr>
     <tiles:insert attribute="addSample"/>
+   </table>
 </div>
 
 <br />
 <hr style="width:100%;height:5px" />
 <html:hidden name="<%=formName%>" property="patientPK" styleId="patientPK"/>
 
-<table style="width:100%">
+ <table style="width:100%"> 
     <tr>
         <td style="width:15%;text-align:left">
             <input type="button" name="showHide" value="+" onclick="showHideSection(this, 'patientInfo');" id="orderSectionId">
@@ -694,13 +714,15 @@ function  processPhoneSuccess(xhr){
         </td>
         <td id="gender"><b>&nbsp;</b></td>
     </tr>
-</table>
+    
+</table> 
 
 <div id="patientInfo"  style="display:none;" >
-    <tiles:insert attribute="patientInfo" />
-    <tiles:insert attribute="patientClinicalInfo" />
+   <tiles:insert attribute="patientInfo" />
+   <tiles:insert attribute="patientClinicalInfo" /> 
 </div>
-</div>
+
+
 <script type="text/javascript" >
 
 //all methods here either overwrite methods in tiles or all called after they are loaded

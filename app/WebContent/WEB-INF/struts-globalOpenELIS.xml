@@ -9,6 +9,7 @@
 		<form-bean name="samplePatientEntryForm" type="us.mn.state.health.lims.common.action.BaseActionForm">
             <form-property name="lastupdated" type="java.sql.Timestamp" initial="" />
             <form-property name="currentDate" type="java.lang.String" initial="" />
+            <form-property name="qaEvent" type="java.lang.String" initial="" />
             <form-property name="project" type="java.lang.String" initial="" />
             <form-property name="projects" type="java.util.Collection" />
             <form-property name="patientProcessingStatus" type="java.lang.String" initial="Add" />
@@ -21,6 +22,7 @@
             <form-property name="sampleOrderItems" type="us.mn.state.health.lims.sample.bean.SampleOrderItem" />
             <form-property name="initialSampleConditionList" type="java.util.Collection" />
             <form-property name="testSectionList"  type="java.util.Collection" />
+            <form-property name="qaEventTypes" type="java.util.Collection" />
         </form-bean>
 
 		<form-bean name="SampleConfirmationEntryForm" type="us.mn.state.health.lims.common.action.BaseActionForm">

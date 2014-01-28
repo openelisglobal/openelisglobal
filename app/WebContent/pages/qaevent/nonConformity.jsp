@@ -711,7 +711,7 @@ function  processPhoneSuccess(xhr){
 					<html:hidden styleId='<%="id" + index%>' styleClass="id" name="qaEvents"
 						property="id" indexed="true" onchange='makeDirty();' />
 				</td>
-				<td>
+				<td> 
 					<html:select styleId='<%="qaEvent" + index%>' 
 								 name="qaEvents"
 						         styleClass="readOnly qaEventElement requiredField" 
@@ -754,7 +754,7 @@ function  processPhoneSuccess(xhr){
 				<td>
 					<html:text styleId='<%="note" + index%>'
 					           name="qaEvents"
-							   styleClass="qaEventElement" 
+							   styleClass="Element" 
 							   disabled="false"
 							   property="note" 
 							   indexed="true" 
