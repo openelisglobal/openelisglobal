@@ -17,25 +17,10 @@
  */
 package us.mn.state.health.lims.resultvalidation.action;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.Globals;
-import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessages;
+import org.apache.struts.action.*;
 import org.hibernate.Transaction;
-
 import us.mn.state.health.lims.analysis.dao.AnalysisDAO;
 import us.mn.state.health.lims.analysis.daoimpl.AnalysisDAOImpl;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
@@ -52,6 +37,7 @@ import us.mn.state.health.lims.common.util.validator.ActionError;
 import us.mn.state.health.lims.hibernate.HibernateUtil;
 import us.mn.state.health.lims.note.dao.NoteDAO;
 import us.mn.state.health.lims.note.daoimpl.NoteDAOImpl;
+import us.mn.state.health.lims.note.util.NoteUtil;
 import us.mn.state.health.lims.note.valueholder.Note;
 import us.mn.state.health.lims.patient.valueholder.Patient;
 import us.mn.state.health.lims.referencetables.daoimpl.ReferenceTablesDAOImpl;
@@ -81,6 +67,11 @@ import us.mn.state.health.lims.testresult.dao.TestResultDAO;
 import us.mn.state.health.lims.testresult.daoimpl.TestResultDAOImpl;
 import us.mn.state.health.lims.testresult.valueholder.TestResult;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.text.DecimalFormat;
+import java.util.*;
+
 public class ResultValidationSaveAction extends BaseResultValidationAction implements IResultSaveService  {
 
 	private static final DecimalFormat TWO_DECIMAL_FORMAT = new DecimalFormat("##.##");
@@ -105,7 +96,6 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 	private List<ResultSet> modifiedResultSet;
 	private List<ResultSet> newResultSet;
 
-	private static final String RESULT_TYPE = "I";
 	private static final String RESULT_SUBJECT = "Result Note";
 	private static final String RESULT_TABLE_ID;
 	private static final String RESULT_REPORT_ID;
@@ -230,6 +220,7 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 		for (AnalysisItem item : resultItemList) {
 			List<ActionError> errorList = new ArrayList<ActionError>();
 			validateQuantifiableItems(item, errorList);
+			
 
 			if (errorList.size() > 0) {
 				StringBuilder augmentedAccession = new StringBuilder(item.getAccessionNumber());
@@ -254,7 +245,24 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 				analysisItemWillBeUpdated(analysisItem)){
 			errors.add(new ActionError("errors.missing.result.details", new StringBuilder("Result")));
 		}
+		// verify that qualifiedResultValue has been entered if required
+		if (!GenericValidator.isBlankOrNull(analysisItem.getQualifiedDictionaryId())) {
+		    String[] qualifiedDictionaryIds = analysisItem.getQualifiedDictionaryId().replace("[", "").replace("]", "").split(",");
+		    Set<String> qualifiedDictIdsSet = new HashSet<String>(Arrays.asList(qualifiedDictionaryIds));
+		    
+		    
+		    if (qualifiedDictIdsSet.contains(analysisItem.getResult()) &&
+		            GenericValidator.isBlankOrNull(analysisItem.getQualifiedResultValue())) {
+		        errors.add(new ActionError("errors.missing.result.details", new StringBuilder("Result")));
+		      
+		    }
+
+		}
+				
+		
 	}
+
+
 	
 	private void createUpdateList(List<AnalysisItem> analysisItems, boolean areListeners){
 
@@ -454,7 +462,7 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 			note = new Note();
 			note.setReferenceId(testResult.getResultId());
 			note.setReferenceTableId(ResultsLoadUtility.getResultReferenceTableId());
-			note.setNoteType(RESULT_TYPE);
+			note.setNoteType(NoteUtil.getDefaultNoteType(NoteUtil.NoteSource.VALIDATION));
 			note.setSubject(RESULT_SUBJECT);
 		}
 
@@ -475,7 +483,7 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 		if(GenericValidator.isBlankOrNull(analysisItem.getResultId())){
 			result.setAnalysis(analysis);
 			result.setAnalysisId(analysisItem.getAnalysisId());
-			result.setResultType(analysisItem.getResultType());
+	        result.setResultType(analysisItem.getResultType());
 			TestAnalyte testAnalyte = getTestAnalyteForResult(result);
 
 			if(testAnalyte != null){
@@ -502,12 +510,14 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 			}
 			//changing to quantifiable from non-quantifiable
 		}else if("Q".equals(testResult.getTestResultType())){
+		    
 			List<Result> children = resultDAO.getChildResults(result.getId());
 			if(children.isEmpty()){
 				Result quantifiedResult = new Result();
 				quantifiedResult.setAnalysis(analysis);
 				quantifiedResult.setAnalysisId(analysisItem.getAnalysisId());
-				quantifiedResult.setResultType(analysisItem.getResultType());
+				// alphanumeric is the only supported resultType currently
+				quantifiedResult.setResultType("A");
 				TestAnalyte testAnalyte = getTestAnalyteForResult(quantifiedResult);
 
 				if(testAnalyte != null){
@@ -517,6 +527,8 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 				quantifiedResult.setSysUserId(currentUserId);
 				quantifiedResult.setSortOrder("0");
 				quantifiedResult.setParentResult(result);
+				// changing to quantifiable from non-quantifiable
+				result.setResultType("Q");
 				resultUpdateList.add(quantifiedResult);
 			}else{
 				updateExitingQuntifieableResult(analysisItem.getQualifiedResultValue(), children);

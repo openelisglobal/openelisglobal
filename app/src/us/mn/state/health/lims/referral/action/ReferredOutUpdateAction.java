@@ -16,37 +16,23 @@
  */
 package us.mn.state.health.lims.referral.action;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.Globals;
-import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessages;
-import org.apache.struts.action.DynaActionForm;
+import org.apache.struts.action.*;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
-
 import us.mn.state.health.lims.analysis.dao.AnalysisDAO;
 import us.mn.state.health.lims.analysis.daoimpl.AnalysisDAOImpl;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
 import us.mn.state.health.lims.common.action.BaseAction;
 import us.mn.state.health.lims.common.action.IActionConstants;
 import us.mn.state.health.lims.common.exception.LIMSRuntimeException;
+import us.mn.state.health.lims.common.services.ResultLimitService;
 import us.mn.state.health.lims.common.services.StatusService;
 import us.mn.state.health.lims.common.services.StatusService.AnalysisStatus;
 import us.mn.state.health.lims.common.services.StatusService.OrderStatus;
@@ -86,6 +72,10 @@ import us.mn.state.health.lims.testresult.dao.TestResultDAO;
 import us.mn.state.health.lims.testresult.daoimpl.TestResultDAOImpl;
 import us.mn.state.health.lims.testresult.valueholder.TestResult;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
+
 public class ReferredOutUpdateAction extends BaseAction {
 
 	private List<ReferralSet> referralSetList;
@@ -107,7 +97,6 @@ public class ReferredOutUpdateAction extends BaseAction {
 	
 	private static final String RESULT_SUBJECT = "Result Note";
 	private TestDAO testDAO = new TestDAOImpl();
-	private ResultsLoadUtility resultsLoadUtility;
 	private SampleHumanDAO sampleHumanDAO = new SampleHumanDAOImpl();
 
 	@Override
@@ -124,7 +113,7 @@ public class ReferredOutUpdateAction extends BaseAction {
 	@Override
 	protected ActionForward performAction(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
-		resultsLoadUtility = new ResultsLoadUtility(currentUserId);
+
 		parentSamples = new HashSet<Sample>();
 		modifiedSamples = new ArrayList<Sample>();
 		errors = new ActionMessages();
@@ -211,7 +200,7 @@ public class ReferredOutUpdateAction extends BaseAction {
 		} catch (LIMSRuntimeException lre) {
 			tx.rollback();
 
-			ActionError error = null;
+			ActionError error;
 			if (lre.getException() instanceof StaleObjectStateException) {
 				error = new ActionError("errors.OptimisticLockException", null, null);
 			} else {
@@ -338,18 +327,18 @@ public class ReferredOutUpdateAction extends BaseAction {
 												 	  referralItem.getCasualResultId(),
 												 	  ResultsLoadUtility.getResultReferenceTableId(),
 												 	  RESULT_SUBJECT,
-												 	  currentUserId);
+                                                      currentUserId,
+                                                      NoteUtil.getDefaultNoteType(NoteUtil.NoteSource.OTHER));
 
-		createReferralResults(referralItem, referralSet);
+        createReferralResults(referralItem, referralSet);
 
 		if (referralItem.getAdditionalTests() != null) {
 			for (ReferredTest existingAdditionalTest : referralItem.getAdditionalTests()) {
-				if (existingAdditionalTest.isRemove()) {
-					// nothing to do, because on insert we reused what we could
+				if (!existingAdditionalTest.isRemove()) {
+					// nothing to do if isRemove, because on insert we reused what we could
 					// then deleted all old referralResults (see below).
 					// removableReferralResults.add(getRemovableReferralableResults(existingAdditionalTest));
-				} else {
-					createReferralResults(existingAdditionalTest, referralSet);
+                    createReferralResults(existingAdditionalTest, referralSet);
 				}
 			}
 		}
@@ -414,8 +403,6 @@ public class ReferredOutUpdateAction extends BaseAction {
 	 * translate into the result should already be loaded in
 	 * referredTest.referredDictionaryResult
 	 * 
-	 * @param referredTest
-	 * @param result
 	 */
 	private void setResultValuesForReferralResult(IReferralResultTest referredTest, Result result) {
 		result.setSysUserId(currentUserId);
@@ -424,7 +411,7 @@ public class ReferredOutUpdateAction extends BaseAction {
 		Test test = testDAO.getTestById(referredTest.getReferredTestId());
 		Sample sample = referralDAO.getReferralById(referredTest.getReferralId()).getAnalysis().getSampleItem().getSample();
 		Patient patient = sampleHumanDAO.getPatientForSample(sample);
-		ResultLimit limit = resultsLoadUtility.getResultLimitForTestAndPatient(test, patient);
+		ResultLimit limit = new ResultLimitService().getResultLimitForTestAndPatient(test, patient);
 		result.setMinNormal(limit != null ? limit.getLowNormal() : 0.0);
 		result.setMaxNormal(limit != null ? limit.getHighNormal()  : 0.0);
 		
@@ -576,7 +563,7 @@ public class ReferredOutUpdateAction extends BaseAction {
 		}
 
 		ReferralResult getNextReferralResult() {
-			ReferralResult referralResult = null;
+			ReferralResult referralResult;
 			if (oldReferralResults.size() > 0) {
 				referralResult = oldReferralResults.remove(0);
 				existingReferralResults.add(referralResult);
