@@ -46,8 +46,10 @@ sub sendToServer{
     my $upLoadPassword = shift;
     
     my $maxRetryCount = 2;
-    my $curlExe = '.\curl\curl.exe';
-    
+    # my $curlExe = "curl";
+    my $curlExe = 'c:\curl\curl.exe';
+	
+	
     my @files = <$queueDir/*.*>; 
     
     foreach $file (@files) { 
@@ -85,9 +87,9 @@ sub sendToServer{
     }           
 }
 
-my $upLoadtargetURL = 'http://192.168.1.1:8080/CDIOpenElis/importAnalyzer';
+my $upLoadtargetURL = 'https://openelis-dev.cirg.washington.edu/CDIOpenElis/importAnalyzer';
 my $stagingDir1 = ".\\staging";
-my $stagingDir2 = "Y:";
+#my $stagingDir2 = "Y:";
 my $queueDir = ".\\transmissionQueue";
 my $upLoadUserName = 'analyzer';
 my $upLoadPassword = 'ied1poh2Ku!';
@@ -96,7 +98,7 @@ print "Welcome to analyzer import\n";
  
 while( 1 ){
     updateQueue( $stagingDir1, $queueDir, $timeTagFile1 );
-    updateQueue( $stagingDir2, $queueDir, $timeTagFile2 );
+   # updateQueue( $stagingDir2, $queueDir, $timeTagFile2 );
     sendToServer($queueDir, $upLoadtargetURL, $upLoadUserName, $upLoadPassword);
 
     sleep 30;

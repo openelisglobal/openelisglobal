@@ -1,0 +1,11 @@
+<Context path="openelisglobal-core">
+    <Resource auth="Container" 
+        driverClassName="org.postgresql.Driver" 
+        maxActive="20" maxIdle="10" maxWait="-1" 
+        name="jdbc/LimsDS" 
+        password="CITeam!" 
+        type="javax.sql.DataSource" 
+        url="jdbc:postgresql://localhost:5432/ci_lnsp" 
+        username="clinlims"/>
+</Context>
+
