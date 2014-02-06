@@ -4,7 +4,7 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="220"/>
+	<property name="ireport.y" value="39"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -174,7 +174,7 @@
 					<textElement verticalAlignment="Middle">
 						<font fontName="Comic Sans MS"/>
 					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[(($F{age} =="")||($F{age} ==null)) ? "Age: Indisponible" : "Age: "+$F{age}]]></textFieldExpression>
+					<textFieldExpression class="java.lang.String"><![CDATA[($F{age}.isEmpty()) ? "Age: Indisponible" : "age: "+$F{age}]]></textFieldExpression>
 				</textField>
 				<textField isBlankWhenNull="true">
 					<reportElement x="334" y="97" width="155" height="14"/>
@@ -305,7 +305,7 @@
 					<textElement verticalAlignment="Middle">
 						<font fontName="Comic Sans MS"/>
 					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[(($F{siteInfo} == "")||($F{siteInfo} == null)) ? "Indisponible" : $F{siteInfo}]]></textFieldExpression>
+					<textFieldExpression class="java.lang.String"><![CDATA[(($F{siteInfo} =="")||($F{siteInfo} ==null)) ? "Age: Indisponible" : "Age: "+$F{siteInfo}]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement mode="Transparent" x="274" y="213" width="88" height="14" backcolor="#CCCCCC"/>
