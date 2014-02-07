@@ -1,9 +1,16 @@
+# compiled code #
 *.class
 
 # Package Files #
 *.war
 *.ear
 
+#local use files
+liqubase.properties
+
 # IDE files #
 .project
 .idea
+app/out/
+app.iml
+liquibase.iml

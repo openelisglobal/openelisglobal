@@ -16,9 +16,6 @@
  */
 package us.mn.state.health.lims.patient.action.bean;
 
-import java.io.Serializable;
-import java.util.List;
-
 import us.mn.state.health.lims.common.services.DisplayListService;
 import us.mn.state.health.lims.common.services.DisplayListService.ListType;
 import us.mn.state.health.lims.common.util.IdValuePair;
@@ -28,7 +25,10 @@ import us.mn.state.health.lims.patienttype.dao.PatientTypeDAO;
 import us.mn.state.health.lims.patienttype.daoimpl.PatientTypeDAOImpl;
 import us.mn.state.health.lims.patienttype.valueholder.PatientType;
 
-public class PatientManagmentInfo implements Serializable {
+import java.io.Serializable;
+import java.util.List;
+
+public class PatientManagementInfo implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String currentDate;
@@ -68,6 +68,8 @@ public class PatientManagmentInfo implements Serializable {
 	private static List<IdValuePair> educationList;
 	private static List<IdValuePair> maritialList;
 	private static List<IdValuePair> nationalityList;
+    private boolean readOnly = false;
+    private String age;
 
 	
 	public String getCurrentDate() {
@@ -209,7 +211,7 @@ public class PatientManagmentInfo implements Serializable {
 		return genders;
 	}
 	public void setPatientTypes(List<PatientType> patientTypes) {
-		PatientManagmentInfo.patientTypes = patientTypes;
+		PatientManagementInfo.patientTypes = patientTypes;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -248,7 +250,7 @@ public class PatientManagmentInfo implements Serializable {
 		return healthRegions;
 	}
 	public void setHealthRegions(List<IdValuePair> healthRegions) {
-		PatientManagmentInfo.healthRegions = healthRegions;
+		PatientManagementInfo.healthRegions = healthRegions;
 	}
 	public String getHealthRegion() {
 		return healthRegion;
@@ -269,7 +271,7 @@ public class PatientManagmentInfo implements Serializable {
 		return educationList;
 	}
 	public void setEducationList(List<IdValuePair> educationList) {
-		PatientManagmentInfo.educationList = educationList;
+		PatientManagementInfo.educationList = educationList;
 	}
 	public List<IdValuePair> getMaritialList() {
 		if( maritialList == null){
@@ -278,7 +280,7 @@ public class PatientManagmentInfo implements Serializable {
 		return maritialList;
 	}
 	public void setMaritialList(List<IdValuePair> maritialList) {
-		PatientManagmentInfo.maritialList = maritialList;
+		PatientManagementInfo.maritialList = maritialList;
 	}
 	public List<IdValuePair> getNationalityList() {
 		if( nationalityList == null){
@@ -287,7 +289,7 @@ public class PatientManagmentInfo implements Serializable {
 		return nationalityList;
 	}
 	public void setNationalityList(List<IdValuePair> nationalityList) {
-		PatientManagmentInfo.nationalityList = nationalityList;
+		PatientManagementInfo.nationalityList = nationalityList;
 	}
 	public String getOtherNationality() {
 		return otherNationality;
@@ -320,4 +322,19 @@ public class PatientManagmentInfo implements Serializable {
 		this.guid = guid;
 	}
 
+    public boolean isReadOnly(){
+        return readOnly;
+    }
+
+    public void setReadOnly( boolean readOnly ){
+        this.readOnly = readOnly;
+    }
+
+    public String getAge(){
+        return age;
+    }
+
+    public void setAge( String age ){
+        this.age = age;
+    }
 }
