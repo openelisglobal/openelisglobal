@@ -17,13 +17,13 @@
 */
 package us.mn.state.health.lims.test.beanItems;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import us.mn.state.health.lims.common.util.IdValuePair;
 import us.mn.state.health.lims.result.action.util.ResultItem;
 import us.mn.state.health.lims.result.valueholder.Result;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestResultItem implements ResultItem, Serializable{
 
@@ -41,13 +41,16 @@ public class TestResultItem implements ResultItem, Serializable{
 	private boolean isGroupSeparator = false;
 	private int sampleGroupingNumber = 1;  //display only -- groups like samples together
 
-
+	/*
+	 * Used for inserting Patient Names/o into lists of TestResultItems
+	 */
+	private boolean isServingAsTestGroupIdentifier = false;
 	
-	private static String NO = "no";
+    private static String NO = "no";
 	@SuppressWarnings("unused")
 	private static String YES = "yes";
 
-	public enum Method{ DNA, MANUAL, AUTO; }
+    public enum Method{ DNA, MANUAL, AUTO; }
 	public enum ResultDisplayType { TEXT, POS_NEG, POS_NEG_IND, HIV, SYPHILIS; }
 
 	private String sampleSource;
@@ -67,13 +70,16 @@ public class TestResultItem implements ResultItem, Serializable{
 	private double lowerNormalRange = 0;
 	private double upperAbnormalRange;
 	private double lowerAbnormalRange;
+    private String normalRange = "";
+    private int significantDigits = -1;
 	private String resultValue;
 	private String remarks;
 	private String technician;
 	private boolean reportable;
 	private String patientName;
 	private String patientInfo;
-	private String unitsOfMeasure = "";
+	private String nationalId;
+    private String unitsOfMeasure = "";
 
 //	private String testSortNumber;
 	private String resultType;
@@ -93,10 +99,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	private boolean valid = true;
 	private boolean normal = true;
 	private boolean notIncludedInWorkplan = false;
-	private int reflexStep = 0;
 	private boolean isUserChoiceReflex = false;
-	private boolean userChoicePending;
-	private String reflexSelectionId;
 	private String siblingReflexKey;
 	private String thisReflexKey;
 	private boolean readOnly = false;
@@ -119,6 +122,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	private String qualifiedResultId;
 	private String nextVisitDate;
 	private String forceTechApproval;
+    private String reflexJSONResult;
 	
 	public String getAccessionNumber() {
 		return accessionNumber;
@@ -173,9 +177,13 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setTechnicianSignatureId(String technicianId) {
 		this.technicianSignatureId = technicianId;
 	}
+
+    @Deprecated
 	public String getSupervisorSignatureId() {
 		return supervisorSignatureId;
 	}
+
+    @Deprecated
 	public void setSupervisorSignatureId(String superviserId) {
 		this.supervisorSignatureId = superviserId;
 	}
@@ -280,7 +288,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	}
 
 	public boolean isRemoved(){
-		return remove==NO;
+		return NO.equals( remove );
 	}
 
 /*	public void setTestSortNumber(String testSortNumber) {
@@ -319,10 +327,6 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setTestId(String testId) {
 		this.testId = testId;
 	}
-	public String getNormalRange() {
-		return String.valueOf(lowerNormalRange) + "-" + String.valueOf(upperNormalRange);
-	}
-
 	public String getResultValue() {
 		return resultValue;
 	}
@@ -417,12 +421,7 @@ public class TestResultItem implements ResultItem, Serializable{
 	public String getReceivedDate() {
 		return receivedDate;
 	}
-	public void setReflexStep(int reflexStep) {
-		this.reflexStep = reflexStep;
-	}
-	public int getReflexStep() {
-		return reflexStep;
-	}
+
 	public void setResult(Result result) {
 		setResultId(result == null ? "" : result.getId());
 		this.result = result;
@@ -546,18 +545,6 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setDisplayResultAsLog(boolean displayResultAsLog) {
 		this.displayResultAsLog = displayResultAsLog;
 	}
-	public String getReflexSelectionId() {
-		return reflexSelectionId;
-	}
-	public void setReflexSelectionId(String reflexSelectionId) {
-		this.reflexSelectionId = reflexSelectionId;
-	}
-	public boolean isUserChoicePending() {
-		return userChoicePending;
-	}
-	public void setUserChoicePending(boolean userChoicePending) {
-		this.userChoicePending = userChoicePending;
-	}
 	public boolean isNonconforming() {
 		return nonconforming;
 	}
@@ -594,5 +581,37 @@ public class TestResultItem implements ResultItem, Serializable{
 	public void setForceTechApproval(String forceTechApproval){
 		this.forceTechApproval = forceTechApproval;
 	}
-	
+    public String getReflexJSONResult(){
+        return reflexJSONResult;
+    }
+    public void setReflexJSONResult( String reflexJSONResult ){
+        this.reflexJSONResult = reflexJSONResult;
+    }
+    public String getNormalRange(){
+        return normalRange;
+    }
+    public void setNormalRange( String normalRange ){
+        this.normalRange = normalRange;
+    }
+    public int getSignificantDigits(){
+        return significantDigits;
+    }
+    public void setSignificantDigits( int significantDigits ){
+        this.significantDigits = significantDigits;
+    }
+    public boolean isServingAsTestGroupIdentifier() {
+        return isServingAsTestGroupIdentifier;
+    }
+    public void setServingAsTestGroupIdentifier(
+            boolean isServingAsTestGroupIdentifier) {
+        this.isServingAsTestGroupIdentifier = isServingAsTestGroupIdentifier;
+    }
+    public String getNationalId() {
+        return nationalId;
+    }
+    public void setNationalId(String nationalId) {
+        this.nationalId = nationalId;
+    }
+
+
 }

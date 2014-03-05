@@ -16,46 +16,24 @@
  */
 package us.mn.state.health.lims.sample.action;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.DynaActionForm;
-
 import us.mn.state.health.lims.analysis.dao.AnalysisDAO;
 import us.mn.state.health.lims.analysis.daoimpl.AnalysisDAOImpl;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
 import us.mn.state.health.lims.common.action.BaseAction;
-import us.mn.state.health.lims.common.action.BaseActionForm;
 import us.mn.state.health.lims.common.action.IActionConstants;
 import us.mn.state.health.lims.common.formfields.FormFields;
-import us.mn.state.health.lims.common.services.DisplayListService;
+import us.mn.state.health.lims.common.services.*;
 import us.mn.state.health.lims.common.services.DisplayListService.ListType;
-import us.mn.state.health.lims.common.services.IPatientService;
-import us.mn.state.health.lims.common.services.PatientService;
-import us.mn.state.health.lims.common.services.StatusService;
 import us.mn.state.health.lims.common.services.StatusService.AnalysisStatus;
 import us.mn.state.health.lims.common.services.StatusService.SampleStatus;
-import us.mn.state.health.lims.common.util.ConfigurationProperties;
-import us.mn.state.health.lims.common.util.ConfigurationProperties.Property;
 import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.common.util.StringUtil;
-import us.mn.state.health.lims.observationhistory.daoimpl.ObservationHistoryDAOImpl;
-import us.mn.state.health.lims.observationhistory.valueholder.ObservationHistory;
-import us.mn.state.health.lims.observationhistorytype.daoImpl.ObservationHistoryTypeDAOImpl;
-import us.mn.state.health.lims.observationhistorytype.valueholder.ObservationHistoryType;
 import us.mn.state.health.lims.patient.valueholder.Patient;
 import us.mn.state.health.lims.sample.bean.SampleEditItem;
 import us.mn.state.health.lims.sample.dao.SampleDAO;
@@ -75,6 +53,11 @@ import us.mn.state.health.lims.typeofsample.daoimpl.TypeOfSampleTestDAOImpl;
 import us.mn.state.health.lims.typeofsample.valueholder.TypeOfSample;
 import us.mn.state.health.lims.typeofsample.valueholder.TypeOfSampleTest;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
 public class SampleEditAction extends BaseAction {
 
 	private String accessionNumber;
@@ -85,8 +68,7 @@ public class SampleEditAction extends BaseAction {
 	private static final SampleEditItemComparator testComparator = new SampleEditItemComparator();
 	private boolean isEditable = false;
 	private static Set<Integer> excludedAnalysisStatusList;
-	private static Set<Integer> includedSampleStatusList;
-	private static String PAYMENT_STATUS_OBSERVATION_ID = null;
+	private static final Set<Integer> ENTERED_STATUS_SAMPLE_LIST = new HashSet<Integer>();
 	private String maxAccessionNumber;
 
 	static {
@@ -94,14 +76,7 @@ public class SampleEditAction extends BaseAction {
 		excludedAnalysisStatusList.add(Integer.parseInt(StatusService.getInstance().getStatusID(AnalysisStatus.ReferredIn)));
 		excludedAnalysisStatusList.add(Integer.parseInt(StatusService.getInstance().getStatusID(AnalysisStatus.Canceled)));
 
-		includedSampleStatusList = new HashSet<Integer>();
-		includedSampleStatusList.add(Integer.parseInt(StatusService.getInstance().getStatusID(SampleStatus.Entered)));
-		
-		ObservationHistoryType observationType = new ObservationHistoryTypeDAOImpl().getByName("paymentStatus");
-		if (observationType != null) {
-			PAYMENT_STATUS_OBSERVATION_ID = observationType.getId();
-		}
-
+		ENTERED_STATUS_SAMPLE_LIST.add( Integer.parseInt( StatusService.getInstance().getStatusID( SampleStatus.Entered ) ) );
 	}
 
 	protected ActionForward performAction(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)
@@ -121,7 +96,7 @@ public class SampleEditAction extends BaseAction {
 
 		dynaForm.initialize(mapping);
 
-		isEditable = "readwrite".equals((String) request.getSession().getAttribute(IActionConstants.SAMPLE_EDIT_WRITABLE))
+		isEditable = "readwrite".equals(request.getSession().getAttribute(IActionConstants.SAMPLE_EDIT_WRITABLE))
 				|| "readwrite".equals(request.getParameter("type"));
 		PropertyUtils.setProperty(dynaForm, "isEditable", isEditable);
 		if (!GenericValidator.isBlankOrNull(accessionNumber)) {
@@ -138,24 +113,15 @@ public class SampleEditAction extends BaseAction {
 				setCurrentTestInfo(dynaForm);
 				setAddableTestInfo(dynaForm);
 				setAddableSampleTypes(dynaForm);
+                setSampleOrderInfo(dynaForm);
 				PropertyUtils.setProperty(dynaForm, "maxAccessionNumber", maxAccessionNumber);
+                PropertyUtils.setProperty( dynaForm, "isConfirmationSample", new SampleService( sample ).isConfirmationSample() );
 			} else {
 				PropertyUtils.setProperty(dynaForm, "noSampleFound", Boolean.TRUE);
 			}
 		} else {
 			PropertyUtils.setProperty(dynaForm, "searchFinished", Boolean.FALSE);
 			request.getSession().setAttribute(IActionConstants.SAMPLE_EDIT_WRITABLE, request.getParameter("type"));
-		}
-
-		if (ConfigurationProperties.getInstance().isPropertyValueEqual(Property.trackPatientPayment, "true")) {
-			setDictionaryList((BaseActionForm) dynaForm, "paymentOptions", "PP", true);
-
-			if (sample != null) {
-				ObservationHistory paymentObservation = new ObservationHistoryDAOImpl().getObservationHistoriesBySampleIdAndType(sample.getId(), PAYMENT_STATUS_OBSERVATION_ID);
-				if (paymentObservation != null) {
-					PropertyUtils.setProperty(dynaForm, "paymentOptionSelection", paymentObservation.getValue() );
-				}
-			}
 		}
 
 		if (FormFields.getInstance().useField(FormFields.Field.InitialSampleCondition)) {
@@ -167,7 +133,12 @@ public class SampleEditAction extends BaseAction {
 		return mapping.findForward(forward);
 	}
 
-	private String getMostRecentAccessionNumberForPaitient(String patientID) {
+    private void setSampleOrderInfo( DynaActionForm dynaForm ) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        SampleOrderService sampleOrderService = new SampleOrderService( sample );
+        PropertyUtils.setProperty( dynaForm, "sampleOrderItems", sampleOrderService.getSampleOrderItem() );
+    }
+
+    private String getMostRecentAccessionNumberForPaitient(String patientID) {
 		String accessionNumber = null;
 		if( !GenericValidator.isBlankOrNull(patientID)){
 			List<Sample> samples = new SampleHumanDAOImpl().getSamplesForPatient(patientID);
@@ -192,7 +163,7 @@ public class SampleEditAction extends BaseAction {
 	private void getSampleItems() {
 		SampleItemDAO sampleItemDAO = new SampleItemDAOImpl();
 
-		sampleItemList = sampleItemDAO.getSampleItemsBySampleIdAndStatus(sample.getId(), includedSampleStatusList);
+		sampleItemList = sampleItemDAO.getSampleItemsBySampleIdAndStatus(sample.getId(), ENTERED_STATUS_SAMPLE_LIST );
 	}
 
 	private void setPatientInfo(DynaActionForm dynaForm) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
@@ -200,8 +171,7 @@ public class SampleEditAction extends BaseAction {
 		Patient patient = new SampleHumanDAOImpl().getPatientForSample(sample);
 		IPatientService patientService = new PatientService(patient);
 
-		PropertyUtils.setProperty(dynaForm, "firstName", patientService.getFirstName());
-		PropertyUtils.setProperty(dynaForm, "lastName", patientService.getLastName());
+        PropertyUtils.setProperty( dynaForm, "patientName", patientService.getLastFirstName() );
 		PropertyUtils.setProperty(dynaForm, "dob", patientService.getDOB());
 		PropertyUtils.setProperty(dynaForm, "gender", patientService.getGender());
 		PropertyUtils.setProperty(dynaForm, "nationalId", patientService.getNationalId());
@@ -228,6 +198,8 @@ public class SampleEditAction extends BaseAction {
 
 		List<SampleEditItem> analysisSampleItemList = new ArrayList<SampleEditItem>();
 
+        String collectionDate = DateUtil.convertTimestampToStringDate( sampleItem.getCollectionDate() );
+        String collectionTime = DateUtil.convertTimestampToStringTime( sampleItem.getCollectionDate() );
 		boolean canRemove = true;
 		for (Analysis analysis : analysisList) {
 			SampleEditItem sampleEditItem = new SampleEditItem();
@@ -252,10 +224,13 @@ public class SampleEditAction extends BaseAction {
 
 		if (!analysisSampleItemList.isEmpty()) {
 			Collections.sort(analysisSampleItemList, testComparator);
+            SampleEditItem firstItem = analysisSampleItemList.get( 0 );
 
-			analysisSampleItemList.get(0).setAccessionNumber(accessionNumber + "-" + sampleItem.getSortOrder());
-			analysisSampleItemList.get(0).setSampleType(typeOfSample.getLocalizedName());
-			analysisSampleItemList.get(0).setCanRemoveSample(canRemove);
+            firstItem.setAccessionNumber(accessionNumber + "-" + sampleItem.getSortOrder());
+            firstItem.setSampleType(typeOfSample.getLocalizedName());
+            firstItem.setCanRemoveSample(canRemove);
+            firstItem.setCollectionDate( collectionDate == null ? "" : collectionDate );
+            firstItem.setCollectionTime( collectionTime );
 			maxAccessionNumber = analysisSampleItemList.get(0).getAccessionNumber();
 			currentTestList.addAll(analysisSampleItemList);
 		}
