@@ -688,7 +688,7 @@ public class ResultsLoadUtility {
 
 		//testItem.setDisplayResultAsLog(hasLogValue(analysisService.getAnalysis(), testItem.getResultValue()));
         testItem.setDisplayResultAsLog(hasLogValue(testService));
-        testItem.setNonconforming( analysisService.isParentNonConforming() ||  );
+        testItem.setNonconforming( analysisService.isParentNonConforming() );
         
         Result quantifiedResult = analysisService.getQuantifiedResult();
         if( quantifiedResult != null){
