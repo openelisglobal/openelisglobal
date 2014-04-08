@@ -38,7 +38,7 @@
 <bean:define id="logbookType" name="<%=formName%>" property="logbookType" />
 
 
-<%!
+                                                                   <%!
 	List<String> hivKits;
 	List<String> syphilisKits;
 	String basePath = "";
@@ -55,7 +55,7 @@
 	boolean failedValidationMarks = false;
 	boolean noteRequired = false;
 	boolean autofillTechBox = false;
-
+    boolean useRejected = false;
  %>
 <%
 	hivKits = new ArrayList<String>();
@@ -67,7 +67,7 @@
 		}else{
 	syphilisKits.add( item.getInventoryLocationId());
 		}
-	}
+	}                                                
 
 	String path = request.getContextPath();
 	basePath = request.getScheme() + "://" + request.getServerName() + ":"
@@ -84,7 +84,8 @@
 	useNationalID = FormFields.getInstance().useField(Field.NationalID);
 	useSubjectNumber = FormFields.getInstance().useField(Field.SubjectNumber);
 	useTechnicianName =  ConfigurationProperties.getInstance().isPropertyValueEqual(Property.resultTechnicianName, "true");
-
+	useRejected =  ConfigurationProperties.getInstance().isPropertyValueEqual(Property.allowResultRejection, "true");
+	
 	depersonalize = FormFields.getInstance().useField(Field.DepersonalizedResults);
 	ableToRefer = FormFields.getInstance().useField(Field.ResultsReferral);
 	compactHozSpace = FormFields.getInstance().useField(Field.ValueHozSpaceOnResults);
@@ -330,6 +331,22 @@ function forceTechApproval(checkbox, index ){
 
 }
 
+function rejectTest(checkbox, index ){
+    if( $jq(checkbox).attr('checked')){
+        //if( showForceWarning){
+        //    alert( "reject warning!!!!" );
+        //    showForceWarning = false;
+        //}
+        showNote( index );
+    }else{
+        hideNote( index);
+    }
+
+}
+
+function pageOnLoad(){
+    
+}
 </script>
 
 
@@ -369,7 +386,7 @@ function forceTechApproval(checkbox, index ){
 
         <logic:equal  name='<%=formName%>' property="singlePatient" value="true">
 <% if(!depersonalize){ %>        
-<table style="width:100%" >
+<table style="width:100%" border="5" cellspacing="5" >
 	<tr>
 		
 		<th style="width:20%">
@@ -492,7 +509,7 @@ function forceTechApproval(checkbox, index ){
 			<bean:message key="sample.date.format"/>
 		</th>
 		<logic:equal  name="<%=formName%>" property="displayTestMethod" value="true">
-			<th style="width: 72px; padding-right: 10px; text-align: left">
+			<th style="width: 72px; padding-right: 10px; text-align: center">
 				<bean:message key="result.method.auto"/>
 			</th>
 		</logic:equal>
@@ -500,8 +517,8 @@ function forceTechApproval(checkbox, index ){
 			<bean:message key="result.test"/>
 		</th>
 		<th style="width:16px">&nbsp;</th>
-		<th style="width: 56px; padding-right: 10px; text-align: left"><%= StringUtil.getContextualMessageForKey("result.forceAccept.header") %></th>
-		<th style="width:165px" style="text-align: left">
+		<th style="width: 56px; padding-right: 10px; text-align: center"><%= StringUtil.getContextualMessageForKey("result.forceAccept.header") %></th>
+		<th style="width:165px; text-align: left">
 			<bean:message key="result.result"/>
 		</th>
 		<% if( ableToRefer ){ %>
@@ -518,6 +535,13 @@ function forceTechApproval(checkbox, index ){
 			<% } %>
 		</th>
 		<% }%>
+
+        <% if( useRejected ){ %>
+        <th style="text-align: center">
+            <bean:message key="result.rejected"/>
+        </th>
+        <% }%>
+
 		<th style="width:2%;text-align: left">
 			<bean:message key="result.notes"/>
 		</th>
@@ -617,7 +641,7 @@ function forceTechApproval(checkbox, index ){
 			<html:text name="testResult" property="testDate" indexed="true" size="10" tabindex='-1' onchange='<%="markUpdated(" + index + ");" %>'/>
 		</td>
 		<logic:equal  name="<%=formName%>" property="displayTestMethod" value="true">
-			<td class="ruled">
+			<td class="ruled" style='text-align: center'>
 				<html:checkbox name="testResult"
 							property="analysisMethod"
 							indexed="true"
@@ -650,7 +674,7 @@ function forceTechApproval(checkbox, index ){
 			</td>
 		</logic:equal>
 		<logic:equal name="testResult" property="resultDisplayType" value="SYPHILIS">
-			<td style="vertical-align:middle" class="ruled">
+			<td style="vertical-align:middle; text-align: center" class="ruled">
 				<html:hidden name="testResult" property="testMethod" indexed="true"/>
 				<bean:write name="testResult" property="testName"/>
 				<logic:greaterThan name="testResult" property="reflexStep" value="0">
@@ -697,7 +721,7 @@ function forceTechApproval(checkbox, index ){
 		</logic:equal>
 		</td>
 		<!-- force acceptance -->
-		<td class="ruled">
+		<td class="ruled" style='text-align: center'>
 			<html:checkbox name="testResult"
 							property="forceTechApproval"
 							indexed="true"
@@ -893,6 +917,19 @@ function forceTechApproval(checkbox, index ){
 					   onchange='<%="markUpdated(" + index + ");"%>'/>
 		</td>
 		<% } %>
+		
+		<% if( useRejected){ %> 
+		<td class="ruled" style='text-align: center'>
+		<% out.print(testResult.isRejected()); %>
+			<input type="checkbox" 
+			     name='testResult' 
+			     tabindex='-1' 
+			     id='<%="rejected_" + index%>' 
+			     onchange='<%="markUpdated(" + index + "); showHideRejectionReasons(" + index + ");" %>' 
+			     <% if (testResult.isRejected()) out.print("checked='checked'");  %> 
+			 >
+ 		</td>
+		<% } %>
 		<td style="text-align:left" class="ruled">
 						 	<img src="./images/note-add.gif"
 						 	     onclick='<%= "showHideNotes( " + index + ");" %>'
@@ -901,10 +938,27 @@ function forceTechApproval(checkbox, index ){
             <input type="hidden" name="hideShowFlag" value="hidden" id='<%="hideShow_" + index %>' >
 		</td>
 	</tr>
+	
+	<tr id='<%="rejectReasonRow_" + index %>'
+        class='<%= rowColor %>'
+        style='<%=(testResult.isRejected() ? "" : "display: none;") %>'>
+        <td colspan="4"></td>
+        <td colspan="6" style="text-align:right" >
+               <select name="<%="testResult[" + index + "].rejectReasonId"%>"
+                    id='<%="rejectReasonId_" + index%>'
+                    <%=testResult.isReadOnly()? "disabled=\'true\'" : "" %> >
+                    <logic:iterate id="optionValue" name="<%=formName %>" property="rejectReasons" type="IdValuePair" >
+                        <option value='<%=optionValue.getId()%>'  <%if(optionValue.getId().equals(testResult.getRejectReasonId())) out.print("selected"); %>  >
+                            <bean:write name="optionValue" property="value"/>
+                        </option>
+                    </logic:iterate>
+            </select><br/>
+       </td>
+    </tr>   
 	<logic:notEmpty name="testResult" property="pastNotes">
 		<tr class='<%= rowColor %>' >
 			<td colspan="2" style="text-align:right;vertical-align:top"><bean:message key="label.prior.note" />: </td>
-			<td colspan="6" style="text-align:left">
+			<td colspan="8" style="text-align:left">
 				<%= testResult.getPastNotes() %>
 			</td>
 		</tr>
@@ -912,7 +966,7 @@ function forceTechApproval(checkbox, index ){
 	<tr id='<%="noteRow_" + index %>'
 		class='<%= rowColor %>'
 		style="display: none;">
-		<td colspan="3" style="vertical-align:top;text-align:right"><% if(noteRequired &&
+		<td colspan="4" style="vertical-align:top;text-align:right"><% if(noteRequired &&
 														 !(GenericValidator.isBlankOrNull(testResult.getMultiSelectResultValues()) && 
 														   GenericValidator.isBlankOrNull(testResult.getResultValue()))){ %>
 													  <bean:message key="note.required.result.change"/>		

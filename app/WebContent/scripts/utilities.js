@@ -811,6 +811,14 @@ function /*void*/ hideNote(index) {
     $("noteRow_" + index).hide();
 }
 
+function /*void*/ showHideRejectionReasons(index) {
+
+	if ($("rejected_" + index).checked) 
+		$("rejectReasonRow_" + index).show();
+	else 
+		$("rejectReasonRow_" + index).hide();
+}
+
 function showQuanitiy(selector, index, dictionaryIds, context) {
     var multipleResults, resultList, i;
     var quantifiableFound = false;
@@ -838,6 +846,14 @@ function showQuanitiy(selector, index, dictionaryIds, context) {
         $jq("#qualifiedDict_" + index).val("");
         $jq("#hasQualifiedResult_" + index).val("false");
     }
+}
+    
+function /*void*/ hideRejectionReasons(index) {
+    var noteElement = $("showHideButton_" + index);
+
+    //$("showHideButton_" + index).src = $("note_" + index).value.blank() ? "./images/note-add.gif" : "./images/note-edit.gif";
+    $("hideShow_" + index).value = "hidden";
+    $("noteRow_" + index).hide();
 }
 
 function round(value, exp) {
