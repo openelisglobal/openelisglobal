@@ -34,6 +34,7 @@ import us.mn.state.health.lims.common.action.IActionConstants;
 import us.mn.state.health.lims.common.exception.LIMSRuntimeException;
 import us.mn.state.health.lims.common.formfields.FormFields;
 import us.mn.state.health.lims.common.formfields.FormFields.Field;
+import us.mn.state.health.lims.common.services.DisplayListService;
 import us.mn.state.health.lims.common.services.IResultSaveService;
 import us.mn.state.health.lims.common.services.NoteService;
 import us.mn.state.health.lims.common.services.NoteService.NoteType;
@@ -48,6 +49,7 @@ import us.mn.state.health.lims.common.services.serviceBeans.ResultSaveBean;
 import us.mn.state.health.lims.common.util.ConfigurationProperties;
 import us.mn.state.health.lims.common.util.ConfigurationProperties.Property;
 import us.mn.state.health.lims.common.util.DateUtil;
+import us.mn.state.health.lims.common.util.IdValuePair;
 import us.mn.state.health.lims.common.util.StringUtil;
 import us.mn.state.health.lims.common.util.validator.ActionError;
 import us.mn.state.health.lims.hibernate.HibernateUtil;
@@ -115,6 +117,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 	private static String REFERRAL_CONFORMATION_ID;
 
 	private boolean useTechnicianName = ConfigurationProperties.getInstance().isPropertyValueEqual(Property.resultTechnicianName, "true");
+	private boolean useRejected = ConfigurationProperties.getInstance().isPropertyValueEqual(Property.allowResultRejection, "true");
 	private boolean alwaysValidate = ConfigurationProperties.getInstance().isPropertyValueEqual(Property.ALWAYS_VALIDATE_RESULTS, "true");
 	private boolean supportReferrals = FormFields.getInstance().useField( Field.ResultsReferral );
 	private String statusRuleSet = ConfigurationProperties.getInstance().getPropertyValueUpperCase( Property.StatusRules );
@@ -139,6 +142,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 
 		resultValidation.setSupportReferrals(supportReferrals);
 		resultValidation.setUseTechnicianName(useTechnicianName);
+		resultValidation.setUseRejected(useRejected);
 
 		ResultsPaging paging = new ResultsPaging();
 		paging.updatePagedResults(request, dynaForm);
@@ -156,9 +160,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		}
 
 		initializeLists();
-        List<Note> noteList = new ArrayList<Note>(  );
-		createResultsFromItems(noteList);
-
+        List<Note> noteList = new ArrayList<Note>(  );                                                                  
+        createResultsFromItems(noteList);
+        
 		Transaction tx = HibernateUtil.getSession().beginTransaction();
 
 		try{
@@ -171,45 +175,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 				resultDAO.insertData(resultSet.result);
 
 				if(resultSet.signature != null){
-					resultSet.signature.setResultId(resultSet.result.getId());
-					resultSigDAO.insertData(resultSet.signature);
-				}
-
-				if(resultSet.testKit != null && resultSet.testKit.getInventoryLocationId() != null){
-					resultSet.testKit.setResultId(resultSet.result.getId());
-					resultInventoryDAO.insertData(resultSet.testKit);
-				}
-
-				if(resultSet.newReferral != null){
-					insertNewReferralAndReferralResult(resultSet);
-				}
-			}
-
-			for(ResultSet resultSet : modifiedResults){
-				resultDAO.updateData(resultSet.result);
-
-				if(resultSet.signature != null){
-					resultSet.signature.setResultId(resultSet.result.getId());
-					if(resultSet.alwaysInsertSignature){
-						resultSigDAO.insertData(resultSet.signature);
-					}else{
-						resultSigDAO.updateData(resultSet.signature);
-					}
-				}
-
-				if(resultSet.testKit != null && resultSet.testKit.getInventoryLocationId() != null){
-					resultSet.testKit.setResultId(resultSet.result.getId());
-					if(resultSet.testKit.getId() == null){
-						resultInventoryDAO.insertData(resultSet.testKit);
-					}else{
-						resultInventoryDAO.updateData(resultSet.testKit);
-					}
-				}
-
-				if(resultSet.newReferral != null){
-					// we can't just create a referral with a blank result,
-					// because referral page assumes a referralResult and a
-					// result.
+					resultSet.signature.setResultId(resultSet.result.getId());   
 					insertNewReferralAndReferralResult(resultSet);
 				}
 
@@ -336,7 +302,7 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 
 	private boolean isModified(TestResultItem item){
 		return item.getIsModified()
-				&& (ResultUtil.areResults(item) || ResultUtil.areNotes(item) || ResultUtil.isReferred(item) || ResultUtil.isForcedToAcceptance(item));
+				&& (ResultUtil.areResults(item) || ResultUtil.areNotes(item) || ResultUtil.isReferred(item) || ResultUtil.isForcedToAcceptance(item) || ResultUtil.isRejected(item));
 	}
 
 	private void createResultsFromItems( List<Note> noteList ){
@@ -349,6 +315,19 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
             Note note = noteService.createSavableNote( NoteType.INTERNAL, testResultItem.getNote(), RESULT_SUBJECT, currentUserId);
             if( note != null){
                 noteList.add( note );
+            }
+            
+            if (testResultItem.isRejected()) {
+                String rejectedReasonId = testResultItem.getRejectReasonId();
+                for (IdValuePair rejectReason : DisplayListService.createFromDictionaryCategory("resultRejectionReasons", true)) {
+                    if (rejectedReasonId.equals(rejectReason.getId())) {
+                        Note rejectNote = noteService.createSavableNote( NoteType.REJECTION_REASON, rejectReason.getValue(), RESULT_SUBJECT, currentUserId);
+                        noteList.add(rejectNote);
+                        analysis.setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalRejected));
+                        break;
+                    }
+                }
+                
             }
 
             ResultSaveBean bean = ResultSaveBeanAdapter.fromTestResultItem(testResultItem);

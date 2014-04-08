@@ -86,9 +86,18 @@ public class AnalysisItem  {
     private String qualifiedResultId;
     private boolean hasQualifiedResult = false;
     private int significantDigits = 0;
+    private String rejectReasonId;                                                            
 
 
-	public AnalysisItem() {
+	public String getRejectReasonId() {
+        return rejectReasonId;
+    }
+
+    public void setRejectReasonId(String rejectReasonId) {
+        this.rejectReasonId = rejectReasonId;
+    }
+
+    public AnalysisItem() {
 
 	}
 

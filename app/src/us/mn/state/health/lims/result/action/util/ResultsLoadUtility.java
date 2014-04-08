@@ -190,7 +190,7 @@ public class ResultsLoadUtility {
 
 		return getGroupedTestsForSamples();
 	}
-
+	
 	/*
 	 * @deprecated -- unsafe to use outside of beans with firstName, lastName,
 	 * dob, gender, st, nationalId
@@ -688,7 +688,8 @@ public class ResultsLoadUtility {
 
 		//testItem.setDisplayResultAsLog(hasLogValue(analysisService.getAnalysis(), testItem.getResultValue()));
         testItem.setDisplayResultAsLog(hasLogValue(testService));
-        testItem.setNonconforming( analysisService.isParentNonConforming() );
+        testItem.setNonconforming( analysisService.isParentNonConforming() ||  );
+        
         Result quantifiedResult = analysisService.getQuantifiedResult();
         if( quantifiedResult != null){
             testItem.setQualifiedResultId( quantifiedResult.getId() );

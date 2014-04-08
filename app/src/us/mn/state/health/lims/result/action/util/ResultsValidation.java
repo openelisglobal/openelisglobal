@@ -22,17 +22,19 @@ public class ResultsValidation {
 	private boolean supportReferrals = false;
 	private boolean useTechnicianName = false;
 	private boolean noteRequiredForChangedResults = false;
+	private boolean useRejected = false;
 	
-	private static ResultDAO resultDAO = new ResultDAOImpl();
+    private static ResultDAO resultDAO = new ResultDAOImpl();
 	
 	public  List<ActionError> validateItem(TestResultItem item ) {
 		List<ActionError> errors = new ArrayList<ActionError>();
 
 		validateTestDate(item, errors);
+		
+		if (!item.isRejected())
+		    validateResult(item, errors);
 
-		validateResult(item, errors);
-
-		if( noteRequiredForChangedResults){
+		if( noteRequiredForChangedResults && !item.isRejected()) {
 			validateRequiredNote( item, errors);
 		}
 		
@@ -41,6 +43,9 @@ public class ResultsValidation {
 		}
 		if (useTechnicianName) {
 			validateTesterSignature(item, errors);
+		}
+		if (useRejected) {
+		    validateRejection(item, errors);
 		}
 
 		return errors;
@@ -87,6 +92,9 @@ public class ResultsValidation {
 	}
 	
 	private void validateResult(TestResultItem testResultItem, List<ActionError> errors) {
+	    
+	    if (GenericValidator.isBlankOrNull(testResultItem.getResultValue()) && testResultItem.isRejected())
+	        return;
 
 		if (!(ResultUtil.areNotes(testResultItem) || 
 				(supportReferrals && ResultUtil.isReferred(testResultItem)) || 
@@ -116,6 +124,7 @@ public class ResultsValidation {
 			errors.add(new ActionError("error.referral.noReason"));
 		}
 	}
+	
 	
 	private void validateRequiredNote(TestResultItem item, List<ActionError> errors) {
 		if( GenericValidator.isBlankOrNull(item.getNote())&&
@@ -149,6 +158,13 @@ public class ResultsValidation {
 		}
 	}
 
+	private void validateRejection(TestResultItem item, List<ActionError> errors) {
+	    
+        if (item.isRejected() && "0".equals(item.getRejectReasonId())) {
+            errors.add(new ActionError("error.reject.noReason"));
+        }
+    }
+
 
 	public void setSupportReferrals(boolean supportReferrals) {
 		this.supportReferrals = supportReferrals;
@@ -157,5 +173,11 @@ public class ResultsValidation {
 	public void setUseTechnicianName(boolean useTechnicianName) {
 		this.useTechnicianName = useTechnicianName;
 	}
+
+    public void setUseRejected(boolean useRejected) {
+        this.useRejected = useRejected;
+    }
+
+	
 
 }
