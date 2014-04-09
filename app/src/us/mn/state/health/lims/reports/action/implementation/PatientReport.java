@@ -97,6 +97,7 @@ import us.mn.state.health.lims.typeoftestresult.valueholder.TypeOfTestResult.Res
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -141,7 +142,6 @@ public abstract class PatientReport extends Report{
     protected String patientCommune = null;
 
     protected IPatientService patientService;
-    protected Sample reportSample;
     protected Provider currentProvider;
     protected Analysis reportAnalysis;
     protected String reportReferralResultValue;
@@ -157,8 +157,9 @@ public abstract class PatientReport extends Report{
     protected static String LAB_SUBTYPE_OBSERVATION_ID = "0";
     protected static Long PERSON_REQUESTER_TYPE_ID;
     protected static Long ORGANIZATION_REQUESTER_TYPE_ID;
-    protected static final NoteType[] FILTER = {NoteType.EXTERNAL, NoteType.REJECTION_REASON};
+    protected static final NoteType[] FILTER = {NoteType.EXTERNAL, NoteType.REJECTION_REASON, NoteType.NON_CONFORMITY};
     protected Map<String, Boolean> sampleCompleteMap;
+    protected Map<String, Boolean> sampleCorrectedMap;
 
     static{
         PatientIdentityTypeDAO identityTypeDAO = new PatientIdentityTypeDAOImpl();
@@ -238,8 +239,6 @@ public abstract class PatientReport extends Report{
             PropertyUtils.setProperty( dynaForm, "useAccessionDirect", Boolean.TRUE );
             PropertyUtils.setProperty( dynaForm, "useHighAccessionDirect", Boolean.TRUE );
             PropertyUtils.setProperty( dynaForm, "usePatientNumberDirect", Boolean.TRUE );
-
-            PropertyUtils.setProperty( dynaForm, "exportOptions", getExportOptions() );
         }catch( IllegalAccessException e ){
             e.printStackTrace();
         }catch( InvocationTargetException e ){
@@ -279,6 +278,7 @@ public abstract class PatientReport extends Report{
         }
 
         sampleCompleteMap = new HashMap<String, Boolean>();
+        sampleCorrectedMap = new HashMap<String, Boolean>();
         initializeReportItems();
 
         if( reportSampleList.isEmpty() ){
@@ -288,7 +288,6 @@ public abstract class PatientReport extends Report{
             for( Sample sample : reportSampleList ){
                 currentSampleService = new SampleService( sample );
                 handledOrders.add( sample.getId() );
-                reportSample = sample;
                 sampleCompleteMap.put( sample.getAccessionNumber(), Boolean.TRUE );
                 findCompleationDate();
                 findPatientFromSample();
@@ -328,7 +327,7 @@ public abstract class PatientReport extends Report{
     }
 
     private void findContactInfo(){
-        List<SampleRequester> requesters = requesterDAO.getRequestersForSampleId( reportSample.getId() );
+        List<SampleRequester> requesters = requesterDAO.getRequestersForSampleId( currentSampleService.getId() );
         currentContactInfo = "";
         currentSiteInfo = "";
         currentProvider = null;
@@ -433,7 +432,7 @@ public abstract class PatientReport extends Report{
     }
 
     protected void findPatientFromSample(){
-        Patient patient = sampleHumanDAO.getPatientForSample( reportSample );
+        Patient patient = sampleHumanDAO.getPatientForSample( currentSampleService.getSample() );
 
         if( patientService == null || !patient.getId().equals( patientService.getPatientId() ) ){
             STNumber = null;
@@ -498,12 +497,12 @@ public abstract class PatientReport extends Report{
         data.setLastName( patientService.getLastName() );
     }
 
-    protected void reportResultAndConclusion( ClinicalPatientData data ){
+    protected void reportResultAndConclusion( ClinicalPatientData data, Timestamp lastReportTime ){
         List<Result> resultList = resultDAO.getResultsByAnalysis( reportAnalysis );
 
 
         Test test = reportAnalysis.getTest();
-        String note = new NoteService( reportAnalysis ).getNotesAsString( false, true, "<br/>", FILTER );
+        String note = new NoteService( reportAnalysis ).getNotesAsString( true, true, "<br/>", FILTER );
         if( note != null){
             data.setNote( note );
         }
@@ -526,12 +525,12 @@ public abstract class PatientReport extends Report{
                 setReferredResult( data, resultList.get( 0 ) );
                 setNormalRange( data, test, resultList.get( 0 ) );
             }
-        }else if( !StatusService.getInstance().getStatusID( AnalysisStatus.Finalized ).equals( reportAnalysis.getStatusId() ) ){
-            sampleCompleteMap.put( reportSample.getAccessionNumber(), Boolean.FALSE );
+        }else if( !StatusService.getInstance().matches( reportAnalysis.getStatusId(), AnalysisStatus.Finalized ) ){
+            sampleCompleteMap.put( currentSampleService.getAccessionNumber(), Boolean.FALSE );
             data.setResult( StringUtil.getMessageForKey( "report.test.status.inProgress" ) );
         }else{
             setAppropriateResults( resultList, data );
-
+            setCorrectedStatus( resultList, lastReportTime, data);
             Result result = resultList.get( 0 );
             setNormalRange( data, test, result );
             data.setResult( getAugmentedResult( data, result ) );
@@ -540,6 +539,16 @@ public abstract class PatientReport extends Report{
         }
 
         data.setConclusion( currentConclusion );
+    }
+
+    private void setCorrectedStatus( List<Result> resultList, Timestamp lastReportTime, ClinicalPatientData data ){
+        for( Result result : resultList){
+            if( result.getLastupdated().compareTo( lastReportTime ) > 0){
+                data.setCorrectedResult( true );
+                sampleCorrectedMap.put( currentSampleService.getAccessionNumber(), true);
+                break;
+            }
+        }
     }
 
     private boolean noResults( List<Result> resultList ){
@@ -748,11 +757,11 @@ public abstract class PatientReport extends Report{
      *
      * @return  A single record
      */
-    protected ClinicalPatientData reportAnalysisResults(){
+    protected ClinicalPatientData reportAnalysisResults(Timestamp lastReportTime){
         ClinicalPatientData data = new ClinicalPatientData();
         String testName = null;
         String sortOrder = "";
-        String recievedDate = reportSample.getReceivedDateForDisplay();
+        String receivedDate =  currentSampleService.getReceivedDateForDisplay();
 
         boolean doAnalysis = reportAnalysis != null;
 
@@ -761,12 +770,12 @@ public abstract class PatientReport extends Report{
         }
 
         if( FormFields.getInstance().useField( Field.SampleEntryUseReceptionHour ) ){
-            recievedDate += " " + reportSample.getReceivedTimeForDisplay();
+            receivedDate += " " + currentSampleService.getReceivedTimeForDisplay();
         }
 
         data.setContactInfo( currentContactInfo );
         data.setSiteInfo( currentSiteInfo );
-        data.setReceivedDate( recievedDate );
+        data.setReceivedDate( receivedDate );
         data.setDob( getPatientDOB() );
         data.setAge( createReadableAge( data.getDob() ) );
         data.setGender( patientService.getGender() );
@@ -779,7 +788,7 @@ public abstract class PatientReport extends Report{
         data.setHealthRegion( getLazyPatientIdentity( healthRegion, HEALTH_REGION_IDENTITY_TYPE_ID ) );
         data.setHealthDistrict( getLazyPatientIdentity( healthDistrict, HEALTH_DISTRICT_IDENTITY_TYPE_ID ) );
         data.setTestName( testName );
-        data.setPatientSiteNumber( ObservationHistoryService.getValueForSample( ObservationType.REFERRERS_PATIENT_ID, reportSample.getId() ) );
+        data.setPatientSiteNumber( ObservationHistoryService.getValueForSample( ObservationType.REFERRERS_PATIENT_ID, currentSampleService.getId() ) );
 
         if( doAnalysis ){
             data.setPanel( reportAnalysis.getPanel() );
@@ -793,11 +802,11 @@ public abstract class PatientReport extends Report{
             data.setCollectionDateTime( DateUtil.convertTimestampToStringDateAndTime( reportAnalysis.getSampleItem().getCollectionDate() ) );
         }
 
-        data.setAccessionNumber( reportSample.getAccessionNumber() + "-" + sortOrder );
+        data.setAccessionNumber( currentSampleService.getAccessionNumber() + "-" + sortOrder );
         data.setLabOrderType( createLabOrderType() );
 
         if( doAnalysis ){
-            reportResultAndConclusion( data );
+            reportResultAndConclusion( data, lastReportTime );
         }
 
         return data;
@@ -823,7 +832,7 @@ public abstract class PatientReport extends Report{
             return "";
         }
 
-        List<ObservationHistory> primaryOrderTypes = observationDAO.getAll( patientService.getPatient(), reportSample, LAB_TYPE_OBSERVATION_ID );
+        List<ObservationHistory> primaryOrderTypes = observationDAO.getAll( patientService.getPatient(), currentSampleService.getSample(), LAB_TYPE_OBSERVATION_ID );
         if( primaryOrderTypes.isEmpty() ){
             return "";
         }
@@ -837,7 +846,7 @@ public abstract class PatientReport extends Report{
             return primaryLabOrderType.getLocalizedName();
         }
 
-        List<ObservationHistory> subOrderTypes = observationDAO.getAll( patientService.getPatient(), reportSample, LAB_SUBTYPE_OBSERVATION_ID );
+        List<ObservationHistory> subOrderTypes = observationDAO.getAll( patientService.getPatient(), currentSampleService.getSample(), LAB_SUBTYPE_OBSERVATION_ID );
         if( subOrderTypes.isEmpty() ){
             return primaryLabOrderType.getLocalizedName();
         }else{

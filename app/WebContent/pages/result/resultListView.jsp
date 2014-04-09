@@ -808,7 +808,7 @@ function pageOnLoad(){
 					<%=testResult.isReadOnly()? "disabled=\'disabled\'" : "" %> 
 						 title='<%= StringUtil.getMessageForKey("result.multiple_select")%>'
 						 onchange='<%="markUpdated(" + index + "); "  +
-						               ((noteRequired && !GenericValidator.isBlankOrNull(testResult.getMultiSelectResultValues())) ? "showNote( " + index + ");" : "") +
+						               ((noteRequired && testResult.getMultiSelectResultValues() != null && testResult.getMultiSelectResultValues().length() > 2 ) ? "showNote( " + index + ");" : "") +
 						               (testResult.getQualifiedDictionaryId() != null ? "showQuanitiy( this, "+ index + ", " + testResult.getQualifiedDictionaryId() + ", \"M\" );" :"")%>' >
 						<logic:iterate id="optionValue" name="testResult" property="dictionaryResults" type="IdValuePair" >
 						<option value='<%=optionValue.getId()%>' >
@@ -837,7 +837,7 @@ function pageOnLoad(){
                         <%=testResult.isReadOnly()? "disabled=\'disabled\'" : "" %>
                         title='<%= StringUtil.getMessageForKey("result.multiple_select")%>'
                         onchange='<%="markUpdated(" + index + "); "  +
-						               ((noteRequired && !GenericValidator.isBlankOrNull(testResult.getMultiSelectResultValues())) ? "showNote( " + index + ");" : "") +
+						               ((noteRequired && testResult.getMultiSelectResultValues() != null && testResult.getMultiSelectResultValues().length() > 2 ) ? "showNote( " + index + ");" : "") +
 						               (testResult.getQualifiedDictionaryId() != null ? "showQuanitiy( this, "+ index + ", " + testResult.getQualifiedDictionaryId() + ", \"M\" );" :"")%>' >
                     <logic:iterate id="optionValue" name="testResult" property="dictionaryResults" type="IdValuePair" >
                         <option value='<%=optionValue.getId()%>' >

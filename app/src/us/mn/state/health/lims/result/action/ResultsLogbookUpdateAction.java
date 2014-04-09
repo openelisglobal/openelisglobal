@@ -456,7 +456,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
     }
 
     private String getStatusForTestResult(TestResultItem testResult){
-		if(alwaysValidate || !testResult.isValid() || ResultUtil.isForcedToAcceptance(testResult)){
+        if (testResult.isRejected()) {
+            return StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalRejected);
+        }else if(alwaysValidate || !testResult.isValid() || ResultUtil.isForcedToAcceptance(testResult)){
 			return StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalAcceptance);
 		}else if(noResults(testResult.getResultValue(), testResult.getMultiSelectResultValues(), testResult.getResultType())){
 			return StatusService.getInstance().getStatusID(AnalysisStatus.NotStarted);
