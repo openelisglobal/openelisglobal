@@ -38,7 +38,7 @@
 <bean:define id="logbookType" name="<%=formName%>" property="logbookType" />
 
 
-                                                                   <%!
+<%!
 	List<String> hivKits;
 	List<String> syphilisKits;
 	String basePath = "";
@@ -106,6 +106,7 @@
 <script type="text/javascript" src="scripts/OEPaging.js?ver=<%= Versioning.getBuildNumber() %>"></script>
 <script type="text/javascript" src="<%=basePath%>scripts/math-extend.js?ver=<%= Versioning.getBuildNumber() %>" ></script>
 <script type="text/javascript" src="<%=basePath%>scripts/multiselectUtils.js?ver=<%= Versioning.getBuildNumber() %>" ></script>
+
 <link rel="stylesheet" type="text/css" href="css/jquery.asmselect.css?ver=<%= Versioning.getBuildNumber() %>" />
 
 
@@ -331,22 +332,6 @@ function forceTechApproval(checkbox, index ){
 
 }
 
-function rejectTest(checkbox, index ){
-    if( $jq(checkbox).attr('checked')){
-        //if( showForceWarning){
-        //    alert( "reject warning!!!!" );
-        //    showForceWarning = false;
-        //}
-        showNote( index );
-    }else{
-        hideNote( index);
-    }
-
-}
-
-function pageOnLoad(){
-    
-}
 </script>
 
 
@@ -914,21 +899,21 @@ function pageOnLoad(){
 					   disabled='<%= testResult.isReadOnly() %>'
 					   indexed="true" style="margin: 1px"
 					   size="10em"
+					   maxlength="18"
 					   onchange='<%="markUpdated(" + index + ");"%>'/>
 		</td>
 		<% } %>
 		
 		<% if( useRejected){ %> 
-		<td class="ruled" style='text-align: center'>
-		<% out.print(testResult.isRejected()); %>
-			<input type="checkbox" 
-			     name='testResult' 
-			     tabindex='-1' 
-			     id='<%="rejected_" + index%>' 
-			     onchange='<%="markUpdated(" + index + "); showHideRejectionReasons(" + index + ");" %>' 
-			     <% if (testResult.isRejected()) out.print("checked='checked'");  %> 
-			 >
- 		</td>
+		  <input type="hidden" id='<%="rejji" + index %>' value='<%= testResult.isRejected() %>'/>
+			<td class="ruled" style='text-align: center'>
+	                <html:checkbox name="testResult"
+	                    styleId='<%="rejected_" + index%>' 
+	                    property="rejected"
+	                    indexed="true"
+	                    tabindex='-1'
+	                    onchange='<%="markUpdated(" + index + "); showHideRejectionReasons(" + index + ");" %>' />
+	   		</td>
 		<% } %>
 		<td style="text-align:left" class="ruled">
 						 	<img src="./images/note-add.gif"
@@ -936,12 +921,13 @@ function pageOnLoad(){
 						 	     id='<%="showHideButton_" + index %>'
 						    />
             <input type="hidden" name="hideShowFlag" value="hidden" id='<%="hideShow_" + index %>' >
+            <input type="hidden" name="holdResultId" value="hidden" id='<%="holderResultId_" + index %>'/>
 		</td>
 	</tr>
 	
 	<tr id='<%="rejectReasonRow_" + index %>'
         class='<%= rowColor %>'
-        style='<%=(testResult.isRejected() ? "" : "display: none;") %>'>
+        style='display: none;'>
         <td colspan="4"></td>
         <td colspan="6" style="text-align:right" >
                <select name="<%="testResult[" + index + "].rejectReasonId"%>"

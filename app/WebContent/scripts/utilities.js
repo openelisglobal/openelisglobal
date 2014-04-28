@@ -811,13 +811,49 @@ function /*void*/ hideNote(index) {
     $("noteRow_" + index).hide();
 }
 
-function /*void*/ showHideRejectionReasons(index) {
 
-	if ($("rejected_" + index).checked) 
-		$("rejectReasonRow_" + index).show();
-	else 
-		$("rejectReasonRow_" + index).hide();
+function /*void*/ showHideRejectionReasons(index) {
+	if ($jq('#rejected_' + index).prop('checked')) {
+		
+		if(confirm('You are about to delete the results, do you want to continue?')) {
+			$jq("#rejectReasonRow_" + index).show();
+			
+			var resultType = $jq('#resultType_' + index).val();
+			
+			if (resultType == 'C') {
+				resetCascadingMultiSelect(index);
+				disableCascadingMultiSelect(index);
+			} else if (resultType == 'M') {
+				resetMultiSelect(index);
+				disableMultiSelect(index);
+				
+			} else if (resultType == 'D') {
+				$jq('#resultId_' + index).val(0);
+				$jq('#resultId_' + index).attr('disabled', 'true');
+			}  else if (resultType == 'R') {
+				$jq('#results_' + index).val('');
+				$jq('#results_' + index).attr('disabled', 'true');
+			}
+		} else {
+			$jq('#rejected_' + index).prop('checked', false);
+		}
+	} else { 
+		$jq("#rejectReasonRow_" + index).hide();
+			var resultType = $jq('#resultType_' + index).val();
+			
+			if (resultType == 'C') {			
+				 enableCascadingMultiSelect(index);
+			} else if (resultType == 'M') {
+				enableMultiSelect(index);
+			} else if (resultType == 'D') {
+				$jq('#resultId_' + index).removeAttr('disabled');
+			} else if (resultType == 'R') {
+				$jq('#results_' + index).removeAttr('disabled');
+			}
+	}
+	
 }
+
 
 function showQuanitiy(selector, index, dictionaryIds, context) {
     var multipleResults, resultList, i;
@@ -846,14 +882,6 @@ function showQuanitiy(selector, index, dictionaryIds, context) {
         $jq("#qualifiedDict_" + index).val("");
         $jq("#hasQualifiedResult_" + index).val("false");
     }
-}
-    
-function /*void*/ hideRejectionReasons(index) {
-    var noteElement = $("showHideButton_" + index);
-
-    //$("showHideButton_" + index).src = $("note_" + index).value.blank() ? "./images/note-add.gif" : "./images/note-edit.gif";
-    $("hideShow_" + index).value = "hidden";
-    $("noteRow_" + index).hide();
 }
 
 function round(value, exp) {
