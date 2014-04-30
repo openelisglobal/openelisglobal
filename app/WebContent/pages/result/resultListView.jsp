@@ -115,7 +115,7 @@ var varning = <%= StringUtil.getContextualMessageForKey( "referring.order.not.fo
 
 <%if( ConfigurationProperties.getInstance().isPropertyValueEqual(Property.ALERT_FOR_INVALID_RESULTS, "true")){%>
        outOfValidRangeMsg = '<%= StringUtil.getMessageForKey("result.outOfValidRange.msg") %>';
-<% }else{ %>l
+<% }else{ %>
        outOfValidRangeMsg = null;
 <% } %>
 
