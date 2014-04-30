@@ -811,12 +811,53 @@ function /*void*/ hideNote(index) {
     $("noteRow_" + index).hide();
 }
 
+function /*void*/ showCachedRejectionReasonRows() {
+	var rows = $jq('tr[id^="row_"]');
+	for (var i=0; i<rows.length; i++) {
+	    var split = rows[i].id.split("_");
+	    var index = split[1];	    
+		if ($jq('#rejectionConsidered_' + index).val() == 'true' ) {
+			$jq('#rejectReasonRow_' + index).show();
+		}
+	}
+}
 
-function /*void*/ showHideRejectionReasons(index) {
+function disableRejectedResults() {
+	var rows = $jq('tr[id^="row_"]');
+	for (var i=0; i<rows.length; i++) {
+	    var split = rows[i].id.split("_");
+	    var index = split[1];
+	    if ($jq('#isRejected_' + index).val() == 'true') {
+			var resultType = $jq('#resultType_' + index).val();
+			
+			if (resultType == 'C') {
+				resetCascadingMultiSelect(index);
+				disableCascadingMultiSelect(index);
+			} else if (resultType == 'M') {
+				resetMultiSelect(index);
+				disableMultiSelect(index);
+				
+			} else if (resultType == 'D') {
+				$jq('#resultId_' + index).val(0);
+				$jq('#resultId_' + index).attr('disabled', 'true');
+			}  else if (resultType == 'R') {
+				$jq('#results_' + index).val('');
+				$jq('#results_' + index).attr('disabled', 'true');
+			} else {
+				$jq('#results_' + index).val('');
+				$jq('#results_' + index).attr('disabled', 'true');
+			}
+	    }
+	}
+
+}
+
+function /*void*/ showHideRejectionReasons(index, confirmRejection) {
 	if ($jq('#rejected_' + index).prop('checked')) {
 		
-		if(confirm('You are about to delete the results, do you want to continue?')) {
-			$jq("#rejectReasonRow_" + index).show();
+		if(confirm( confirmRejection )) {
+			$jq("#considerRejectReason_" + index).val("true");
+			$jq("#rejectReasonRow_" + index).show();			
 			
 			var resultType = $jq('#resultType_' + index).val();
 			
@@ -833,11 +874,15 @@ function /*void*/ showHideRejectionReasons(index) {
 			}  else if (resultType == 'R') {
 				$jq('#results_' + index).val('');
 				$jq('#results_' + index).attr('disabled', 'true');
+			} else {
+				$jq('#results_' + index).val('');
+				$jq('#results_' + index).attr('disabled', 'true');
 			}
 		} else {
 			$jq('#rejected_' + index).prop('checked', false);
 		}
 	} else { 
+		$jq("#considerRejectReason_" + index).val("");
 		$jq("#rejectReasonRow_" + index).hide();
 			var resultType = $jq('#resultType_' + index).val();
 			
@@ -848,6 +893,8 @@ function /*void*/ showHideRejectionReasons(index) {
 			} else if (resultType == 'D') {
 				$jq('#resultId_' + index).removeAttr('disabled');
 			} else if (resultType == 'R') {
+				$jq('#results_' + index).removeAttr('disabled');
+			} else {
 				$jq('#results_' + index).removeAttr('disabled');
 			}
 	}

@@ -109,13 +109,13 @@
 
 <link rel="stylesheet" type="text/css" href="css/jquery.asmselect.css?ver=<%= Versioning.getBuildNumber() %>" />
 
-
+var varning = <%= StringUtil.getContextualMessageForKey( "referring.order.not.found" ) %>;
 
 <script type="text/javascript" >
 
 <%if( ConfigurationProperties.getInstance().isPropertyValueEqual(Property.ALERT_FOR_INVALID_RESULTS, "true")){%>
        outOfValidRangeMsg = '<%= StringUtil.getMessageForKey("result.outOfValidRange.msg") %>';
-<% }else{ %>
+<% }else{ %>l
        outOfValidRangeMsg = null;
 <% } %>
 
@@ -161,6 +161,10 @@ $jq(document).ready( function() {
 
             loadPagedReflexSelections('<%= StringUtil.getMessageForKey("button.label.edit")%>');
             $jq(".asmContainer").css("display","inline-block");
+            
+            disableRejectedResults();
+            showCachedRejectionReasonRows();
+            
 			});
 
 
@@ -598,6 +602,7 @@ function forceTechApproval(checkbox, index ){
 			<html:hidden name="testResult" property="valid" indexed="true"  styleId='<%="valid_" + index %>'/>
 			<html:hidden name="testResult" property="referralId" indexed="true" />
             <html:hidden name="testResult" property="referralCanceled" indexed="true" />
+            <html:hidden name="testResult" property="considerRejectReason" styleId='<%="considerRejectReason_" + index %>' indexed="true" />
             <html:hidden name="testResult" property="hasQualifiedResult" indexed="true" styleId='<%="hasQualifiedResult_" + index %>' />
             <logic:equal name="testResult" property="userChoiceReflex" value="true">
                 <html:hidden name="testResult" property="reflexJSONResult"  styleId='<%="reflexServerResultId_" + index%>'  styleClass="reflexJSONResult" indexed="true"/>
@@ -905,14 +910,14 @@ function forceTechApproval(checkbox, index ){
 		<% } %>
 		
 		<% if( useRejected){ %> 
-		  <input type="hidden" id='<%="rejji" + index %>' value='<%= testResult.isRejected() %>'/>
 			<td class="ruled" style='text-align: center'>
+			<input type="hidden" id='<%="isRejected_" + index %>' value='<%= testResult.isRejected() %>'/>
 	                <html:checkbox name="testResult"
 	                    styleId='<%="rejected_" + index%>' 
 	                    property="rejected"
 	                    indexed="true"
 	                    tabindex='-1'
-	                    onchange='<%="markUpdated(" + index + "); showHideRejectionReasons(" + index + ");" %>' />
+	                    onchange='<%="markUpdated(" + index + "); showHideRejectionReasons(" + index + ", \'" + StringUtil.getContextualMessageForKey( "result.delete.confirm" ) + "\' );" %>' />
 	   		</td>
 		<% } %>
 		<td style="text-align:left" class="ruled">
@@ -921,13 +926,13 @@ function forceTechApproval(checkbox, index ){
 						 	     id='<%="showHideButton_" + index %>'
 						    />
             <input type="hidden" name="hideShowFlag" value="hidden" id='<%="hideShow_" + index %>' >
-            <input type="hidden" name="holdResultId" value="hidden" id='<%="holderResultId_" + index %>'/>
+            
 		</td>
 	</tr>
 	
 	<tr id='<%="rejectReasonRow_" + index %>'
         class='<%= rowColor %>'
-        style='display: none;'>
+        style='<%= ("true".equals(testResult.getConsiderRejectReason()) ? "" : "display: none;") %>'>
         <td colspan="4"></td>
         <td colspan="6" style="text-align:right" >
                <select name="<%="testResult[" + index + "].rejectReasonId"%>"

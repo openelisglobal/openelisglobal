@@ -126,13 +126,13 @@ public class TestResultItem implements ResultItem, Serializable{
     private String reflexJSONResult;
     private boolean rejected = false;
     private String rejectReasonId;
-    private String holderResultId;
+    private String considerRejectReason;
 	
-	public String getResultHolderId() {
-        return holderResultId;
+    public String getConsiderRejectReason() {
+        return considerRejectReason;
     }
-    public void setResultHolderId(String resultHolderId) {
-        this.holderResultId = resultHolderId;
+    public void setConsiderRejectReason(String considerRejectReason) {
+        this.considerRejectReason = considerRejectReason;
     }
     public String getRejectReasonId() {
         return rejectReasonId;

@@ -17,6 +17,7 @@
  */
 package us.mn.state.health.lims.resultvalidation.action;
 
+import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.Globals;
 import org.apache.struts.action.*;
 import org.hibernate.Transaction;
@@ -25,17 +26,15 @@ import us.mn.state.health.lims.analysis.daoimpl.AnalysisDAOImpl;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
 import us.mn.state.health.lims.common.action.BaseActionForm;
 import us.mn.state.health.lims.common.exception.LIMSRuntimeException;
-import us.mn.state.health.lims.common.services.IResultSaveService;
-import us.mn.state.health.lims.common.services.NoteService;
+import us.mn.state.health.lims.common.services.*;
 import us.mn.state.health.lims.common.services.NoteService.NoteType;
-import us.mn.state.health.lims.common.services.ResultSaveService;
-import us.mn.state.health.lims.common.services.StatusService;
 import us.mn.state.health.lims.common.services.StatusService.AnalysisStatus;
 import us.mn.state.health.lims.common.services.StatusService.OrderStatus;
 import us.mn.state.health.lims.common.services.beanAdapters.ResultSaveBeanAdapter;
 import us.mn.state.health.lims.common.services.registration.ValidationUpdateRegister;
 import us.mn.state.health.lims.common.services.registration.interfaces.IResultUpdate;
 import us.mn.state.health.lims.common.services.serviceBeans.ResultSaveBean;
+import us.mn.state.health.lims.common.util.StringUtil;
 import us.mn.state.health.lims.common.util.validator.ActionError;
 import us.mn.state.health.lims.hibernate.HibernateUtil;
 import us.mn.state.health.lims.note.dao.NoteDAO;
@@ -271,37 +270,32 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 
 		for(AnalysisItem analysisItem : analysisItems){
 			if(!analysisItem.isReadOnly() && analysisItemWillBeUpdated(analysisItem)){
-				String analysisId = analysisItem.getAnalysisId();
 
-				Analysis analysis = new Analysis();
-				analysis.setId(analysisId);
-				analysisDAO.getData(analysis);
+                AnalysisService analysisService = new AnalysisService( analysisItem.getAnalysisId() );
+                Analysis analysis = analysisService.getAnalysis();
+
 				analysis.setSysUserId(currentUserId);
 
-				if(!analysisIdList.contains(analysisId)){
+				if(!analysisIdList.contains(analysis.getId())){
 
 					if(analysisItem.getIsAccepted()){
 						analysis.setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.Finalized));
 						analysis.setReleasedDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis()));
-						analysisIdList.add(analysisId);
+						analysisIdList.add(analysis.getId());
 						analysisUpdateList.add(analysis);
 					}
 
 					if(analysisItem.getIsRejected()){
 						analysis.setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.BiologistRejected));
-						analysisIdList.add(analysisId);
+						analysisIdList.add(analysis.getId());
 						analysisUpdateList.add(analysis);
 					}
 				}
 
-                NoteType noteType = analysisItem.getIsAccepted() ? NoteType.EXTERNAL : NoteType.INTERNAL;
-                Note note = new NoteService( analysis ).createSavableNote( noteType, analysisItem.getNote(), RESULT_SUBJECT, currentUserId );
-                if(note != null){
-                    noteUpdateList.add( note );
-                }
+                createNeedNotes( analysisItem, analysis );
 
                 if (areResults(analysisItem)) {
-                    List<Result> results = createResultFromAnalysisItem(analysisItem, analysis);
+                    List<Result> results = createResultFromAnalysisItem(analysisItem, analysisService);
                     for (Result result : results) {
                         resultUpdateList.add(result);
 
@@ -314,14 +308,29 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 		}
 	}
 
-	private void addResultSets(Analysis analysis, Result result){
+    private void createNeedNotes( AnalysisItem analysisItem, Analysis analysis ){
+        NoteService noteService = new NoteService( analysis );
+
+        if( analysisItem.getIsRejected()){
+            Note note = noteService.createSavableNote( NoteType.INTERNAL, StringUtil.getMessageForKey( "validation.note.retest" ), RESULT_SUBJECT, currentUserId );
+            noteUpdateList.add( note );
+        }
+
+        if( !GenericValidator.isBlankOrNull( analysisItem.getNote() )){
+            NoteType noteType = analysisItem.getIsAccepted() ? NoteType.EXTERNAL : NoteType.INTERNAL;
+            Note note = noteService.createSavableNote( noteType, analysisItem.getNote(), RESULT_SUBJECT, currentUserId );
+            noteUpdateList.add( note );
+        }
+    }
+
+    private void addResultSets(Analysis analysis, Result result){
 		Sample sample = analysis.getSampleItem().getSample();
 		Patient patient = sampleHumanDAO.getPatientForSample(sample);
 		List<DocumentTrack> documents =  documentTrackDAO.getByTypeRecordAndTable(RESULT_REPORT_ID, RESULT_TABLE_ID, result.getId());
 		if( documents.isEmpty()){
-			newResultSet.add(new ResultSet(result, null,null, patient, sample, null, null, null));
+			newResultSet.add(new ResultSet(result, null,null, patient, sample, null, null, null, false));
 		}else{
-			modifiedResultSet.add(new ResultSet(result, null,null, patient, sample, null, null, null));
+			modifiedResultSet.add(new ResultSet(result, null,null, patient, sample, null, null, null, false));
 		}
 	}
 
@@ -457,10 +466,15 @@ public class ResultValidationSaveAction extends BaseResultValidationAction imple
 		return analysis;
 	}
 
-	private List<Result> createResultFromAnalysisItem(AnalysisItem analysisItem, Analysis analysis){
+	private List<Result> createResultFromAnalysisItem(AnalysisItem analysisItem, AnalysisService analysisService){
 
         ResultSaveBean bean =  ResultSaveBeanAdapter.fromAnalysisItem(analysisItem);
-        return new ResultSaveService(analysis, currentUserId ).createResultsFromTestResultItem(bean,deletableList);
+        ResultSaveService resultSaveService = new ResultSaveService(analysisService.getAnalysis(), currentUserId );
+        List<Result> results = resultSaveService.createResultsFromTestResultItem(bean,deletableList);
+        if( analysisService.patientReportHasBeenDone() && resultSaveService.isUpdatedResult()){
+            analysisService.getAnalysis().setCorrectedSincePatientReport( true );
+        }
+        return results;
 	}
 
 

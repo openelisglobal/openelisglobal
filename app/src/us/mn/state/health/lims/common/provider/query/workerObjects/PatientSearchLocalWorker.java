@@ -23,7 +23,6 @@ import us.mn.state.health.lims.common.provider.query.PatientSearchResults;
 import us.mn.state.health.lims.common.services.ObservationHistoryService;
 import us.mn.state.health.lims.common.services.ObservationHistoryService.ObservationType;
 import us.mn.state.health.lims.common.services.PatientService;
-import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.common.util.StringUtil;
 import us.mn.state.health.lims.observationhistory.valueholder.ObservationHistory;
 import us.mn.state.health.lims.patient.dao.PatientDAO;
@@ -82,12 +81,14 @@ public class PatientSearchLocalWorker extends PatientSearchWorker {
         List<PatientSearchResults> resultList = new ArrayList<PatientSearchResults>(  );
         List<ObservationHistory> observationList = ObservationHistoryService.getObservationsByTypeAndValue( ObservationType.REFERRERS_PATIENT_ID, referringId );
 
-        for( ObservationHistory observation : observationList ){
-            Patient patient = patientDAO.getData( observation.getPatientId() );
-            if(patient != null){
-               resultList.add( getSearchResultsForPatient( patient, referringId ));
-            }
+        if( observationList != null){
+            for( ObservationHistory observation : observationList ){
+                Patient patient = patientDAO.getData( observation.getPatientId() );
+                if( patient != null ){
+                    resultList.add( getSearchResultsForPatient( patient, referringId ) );
+                }
 
+            }
         }
 
         return resultList;
@@ -100,7 +101,7 @@ public class PatientSearchLocalWorker extends PatientSearchWorker {
                 service.getFirstName(),
                 service.getLastName(),
                 service.getGender(),
-                DateUtil.convertStringDateToTruncatedTimestamp( service.getDOB() ),
+                service.getDOB(),
                 service.getNationalId(),
                 patient.getExternalId(),
                 service.getSTNumber(),

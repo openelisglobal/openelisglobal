@@ -28,7 +28,6 @@ import us.mn.state.health.lims.common.services.PatientService;
 import us.mn.state.health.lims.common.servlet.validation.AjaxServlet;
 import us.mn.state.health.lims.common.util.ConfigurationProperties;
 import us.mn.state.health.lims.common.util.ConfigurationProperties.Property;
-import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.login.valueholder.UserSessionData;
 import us.mn.state.health.lims.patient.valueholder.Patient;
 import us.mn.state.health.lims.sample.dao.SampleDAO;
@@ -53,15 +52,8 @@ public class PatientSearchProvider extends BaseQueryProvider{
 		String lastName = request.getParameter("lastName");
 		String firstName = request.getParameter("firstName");
 		String STNumber = request.getParameter("STNumber");
-		String subjectNumber = request.getParameter("subjectNumber"); // N.B.
-																		// This
-																		// is a
-																		// bad
-																		// name,
-																		// it is
-																		// other
-																		// than
-																		// STnumber
+        // N.B. This is a bad name, it is other than STnumber
+		String subjectNumber = request.getParameter("subjectNumber");
 		String nationalID = request.getParameter("nationalID");
 		String labNumber = request.getParameter("labNumber");
 		String guid = request.getParameter("guid");
@@ -104,7 +96,7 @@ public class PatientSearchProvider extends BaseQueryProvider{
 				service.getFirstName(),
 				service.getLastName(),
 				service.getGender(),
-				DateUtil.convertStringDateToTruncatedTimestamp(service.getDOB()),
+				service.getDOB(),
 				service.getNationalId(),
 				patient.getExternalId(),
 				service.getSTNumber(),
@@ -124,18 +116,6 @@ public class PatientSearchProvider extends BaseQueryProvider{
 		}
 
 		return new Patient();
-	}
-
-	private String getSubjectNumber(Patient patient){
-		if(patient == null){
-			return null;
-		}
-
-		if(GenericValidator.isBlankOrNull(patient.getNationalId())){
-			return patient.getExternalId();
-		}else{
-			return patient.getNationalId();
-		}
 	}
 
 	private PatientSearchWorker getAppropriateWorker(HttpServletRequest request, boolean suppressExternalSearch){

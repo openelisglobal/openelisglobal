@@ -23,6 +23,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import us.mn.state.health.lims.analysis.valueholder.Analysis;
 import us.mn.state.health.lims.common.services.serviceBeans.ResultSaveBean;
+import us.mn.state.health.lims.common.util.StringUtil;
 import us.mn.state.health.lims.referral.dao.ReferralResultDAO;
 import us.mn.state.health.lims.referral.daoimpl.ReferralResultDAOImpl;
 import us.mn.state.health.lims.referral.valueholder.ReferralResult;
@@ -52,6 +53,7 @@ public class ResultSaveService {
 
     private final Analysis analysis;
     private final String currentUserId;
+    private boolean updatedResult = false;
 
     public ResultSaveService(Analysis analysis, String currentUserId){
         this.analysis = analysis;
@@ -140,6 +142,10 @@ public class ResultSaveService {
                         ? -1 : 0;
             }
         });
+
+        if( !deletableResults.isEmpty() || !results.isEmpty()){
+            updatedResult = true;
+        }
         return results;
     }
 
@@ -248,6 +254,10 @@ public class ResultSaveService {
     }
 
     private void setStandardResultValues(String value, Result result){
+        if( !( GenericValidator.isBlankOrNull( value ) || GenericValidator.isBlankOrNull( result.getValue() ) ) &&
+                !StringUtil.blankIfNull(value).equals( result.getValue() )){
+            updatedResult = true;
+        }
         result.setValue(value);
         result.setSysUserId(currentUserId);
         result.setSortOrder("0");
@@ -259,13 +269,16 @@ public class ResultSaveService {
     }
 
     private Result getQuantifiedResult( ResultSaveBean serviceBean, Result parentResult ){
-        Result qualifiedResult;
-        qualifiedResult = new Result();
+        Result qualifiedResult = new Result();
         setNewResultValues(serviceBean, qualifiedResult);
         setAnalyteForResult(parentResult);
         qualifiedResult.setResultType("A");
         qualifiedResult.setParentResult(parentResult);
         return qualifiedResult;
+    }
+
+    public boolean isUpdatedResult(){
+        return updatedResult;
     }
 
     public static void removeDeletedResultsInTransaction(List<Result> deletableResults, String currentUserId){

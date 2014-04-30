@@ -78,9 +78,6 @@ import us.mn.state.health.lims.resultlimits.valueholder.ResultLimit;
 import us.mn.state.health.lims.sample.dao.SampleDAO;
 import us.mn.state.health.lims.sample.daoimpl.SampleDAOImpl;
 import us.mn.state.health.lims.sample.valueholder.Sample;
-import us.mn.state.health.lims.samplehuman.dao.SampleHumanDAO;
-import us.mn.state.health.lims.samplehuman.daoimpl.SampleHumanDAOImpl;
-import us.mn.state.health.lims.samplehuman.valueholder.SampleHuman;
 import us.mn.state.health.lims.test.beanItems.TestResultItem;
 import us.mn.state.health.lims.testreflex.action.util.TestReflexBean;
 import us.mn.state.health.lims.testreflex.action.util.TestReflexUtil;
@@ -104,7 +101,6 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 	private ResultInventoryDAO resultInventoryDAO = new ResultInventoryDAOImpl();
 	private NoteDAO noteDAO = new NoteDAOImpl();
 	private SampleDAO sampleDAO = new SampleDAOImpl();
-	private SampleHumanDAO sampleHumanDAO = new SampleHumanDAOImpl();
 	private ReferralDAO referralDAO = new ReferralDAOImpl();
 	private ReferralResultDAO referralResultDAO = new ReferralResultDAOImpl();
 	private ResultLimitDAO resultLimitDAO = new ResultLimitDAOImpl();
@@ -286,13 +282,12 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		testReflexUtil.updateModifiedReflexes( convertToTestReflexBeanList( modifiedResults ) );
 	}
 
-
     private List<TestReflexBean> convertToTestReflexBeanList(List<ResultSet> resultSetList){
         List<TestReflexBean> reflexBeanList = new ArrayList<TestReflexBean>();
 
-        for(ResultSet resultSet : resultSetList){
-            TestReflexBean reflex = new TestReflexBean();
-            reflex.setPatient(resultSet.patient);
+		for(ResultSet resultSet : resultSetList){
+			TestReflexBean reflex = new TestReflexBean();
+			reflex.setPatient(resultSet.patient);
 
             if( resultSet.triggersToSelectedReflexesMap.size() > 0 && resultSet.multipleResultsForAnalysis){
                 for( String trigger : resultSet.triggersToSelectedReflexesMap.keySet()){
@@ -309,9 +304,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
                 reflex.setTriggersToSelectedReflexesMap( resultSet.triggersToSelectedReflexesMap );
             }
 
-            reflex.setResult(resultSet.result);
-            reflex.setSample(resultSet.sample);
-            reflexBeanList.add(reflex);
+			reflex.setResult(resultSet.result);
+			reflex.setSample(resultSet.sample);
+			reflexBeanList.add(reflex);
         }
 
         return reflexBeanList;
@@ -370,7 +365,6 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
             }
 
             if (testResultItem.isRejected()) {
-                updateAndAddAnalysisToModifiedList(testResultItem, testResultItem.getTestDate(), analysis);
                 analysisService.getAnalysis().setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalRejected));
                 String rejectedReasonId = testResultItem.getRejectReasonId();
                 for (IdValuePair rejectReason : DisplayListService.createFromDictionaryCategory("resultRejectionReasons", true)) {
@@ -385,9 +379,9 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
             }
 
             ResultSaveBean bean = ResultSaveBeanAdapter.fromTestResultItem(testResultItem);
-            ResultSaveService resultSaveService = new ResultSaveService(analysisService.getAnalysis(),currentUserId);            
+            ResultSaveService resultSaveService = new ResultSaveService(analysisService.getAnalysis(),currentUserId);
             //deletable Results will be written to, not read
-            List<Result> results = resultSaveService.createResultsFromTestResultItem( bean, deletableResults );
+			List<Result> results = resultSaveService.createResultsFromTestResultItem( bean, deletableResults );
 
             analysisService.getAnalysis().setCorrectedSincePatientReport( resultSaveService.isUpdatedResult() &&
                                                                           analysisService.patientReportHasBeenDone()  );
@@ -428,7 +422,6 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 
 		ResultInventory testKit = createTestKitLinkIfNeeded(testResultItem, ResultsLoadUtility.TESTKIT);
 
-		analysis.setStatusId(getStatusForTestResult(testResultItem));
 		analysis.setReferredOut(testResultItem.isReferredOut());
 		analysis.setEnteredDate(DateUtil.getNowAsTimestamp());
 
@@ -475,13 +468,14 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
         getSelectedReflexes( testResultItem.getReflexJSONResult(), triggersToReflexesMap );
 
         if(newResult){
-            newResults.add(new ResultSet(result, technicianResultSignature, testKit, patient, sampleService.getSample(), triggersToReflexesMap, referral,
-                    existingReferral, multipleResultsForAnalysis));
-        }else{
-            modifiedResults.add(new ResultSet(result, technicianResultSignature, testKit, patient, sampleService.getSample(), triggersToReflexesMap,
-                    referral, existingReferral, multipleResultsForAnalysis));
-        }
-        previousAnalysis = analysis;
+			newResults.add(new ResultSet(result, technicianResultSignature, testKit, patient, sampleService.getSample(), triggersToReflexesMap, referral,
+					existingReferral, multipleResultsForAnalysis));
+		}else{
+			modifiedResults.add(new ResultSet(result, technicianResultSignature, testKit, patient, sampleService.getSample(), triggersToReflexesMap,
+					referral, existingReferral, multipleResultsForAnalysis));
+		}
+
+		previousAnalysis = analysis;
 	}
 
     private void getSelectedReflexes( String reflexJSONResult, Map<String, List<String>> triggersToReflexesMap ){
@@ -535,14 +529,13 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 
 		if((TestResultItem.ResultDisplayType.SYPHILIS == testResult.getRawResultDisplayType() || TestResultItem.ResultDisplayType.HIV == testResult
 				.getRawResultDisplayType()) && ResultsLoadUtility.TESTKIT.equals(testKitName)){
-
-            testKit = createTestKit( testResult, testKitName, testResult.getTestKitId() );
-        }
-
+		    
+			testKit = createTestKit( testResult, testKitName, testResult.getTestKitId() );
+		}
         return testKit;
     }
 
-    private ResultInventory createTestKit( TestResultItem testResult, String testKitName, String testKitId ) throws LIMSRuntimeException{
+	private ResultInventory createTestKit( TestResultItem testResult, String testKitName, String testKitId ) throws LIMSRuntimeException{
 		ResultInventory testKit;
 		testKit = new ResultInventory();
 
@@ -556,7 +549,6 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
 		testKit.setSysUserId(currentUserId);
 		return testKit;
 	}
-
 
 	private void updateAnalysis( TestResultItem testResultItem, String testDate, Analysis analysis ){
 		String testMethod = testResultItem.getAnalysisMethod();
