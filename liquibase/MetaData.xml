@@ -306,4 +306,17 @@
 		<column name="lastupdated" valueDate=" now() " /> 		
 	</insert>
 </changeSet>
+<changeSet author="jfurlong" id="1">
+    <comment>Add reject reasons to the result page</comment>
+    <insert schemaName="clinlims" tableName="site_information" >
+        <column name="id" valueNumeric=" nextval( 'site_information_seq' ) " /> 
+        <column name="name"  value="allowResultRejection" />
+        <column name="description" value="If true then a technician has the ability to reject an individual test and select a reason for rejection" />
+        <column name="value" value="false" />
+        <column name="domain_id" valueNumeric=" (select id from clinlims.site_information_domain where name = 'resultConfiguration' ) " />
+        <column name="lastupdated" valueDate=" now() " />
+        <column name="value_type" value="boolean" />
+        <column name="instruction_key" value="allow.result.rejections" />
+    </insert>
+</changeSet>
 </databaseChangeLog>
