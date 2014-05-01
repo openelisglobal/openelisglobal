@@ -109,8 +109,6 @@
 
 <link rel="stylesheet" type="text/css" href="css/jquery.asmselect.css?ver=<%= Versioning.getBuildNumber() %>" />
 
-var varning = <%= StringUtil.getContextualMessageForKey( "referring.order.not.found" ) %>;
-
 <script type="text/javascript" >
 
 <%if( ConfigurationProperties.getInstance().isPropertyValueEqual(Property.ALERT_FOR_INVALID_RESULTS, "true")){%>
@@ -375,7 +373,7 @@ function forceTechApproval(checkbox, index ){
 
         <logic:equal  name='<%=formName%>' property="singlePatient" value="true">
 <% if(!depersonalize){ %>        
-<table style="width:100%" border="5" cellspacing="5" >
+<table style="width:100%">
 	<tr>
 		
 		<th style="width:20%">

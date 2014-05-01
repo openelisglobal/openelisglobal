@@ -35,6 +35,7 @@ import us.mn.state.health.lims.common.exception.LIMSRuntimeException;
 import us.mn.state.health.lims.common.formfields.FormFields;
 import us.mn.state.health.lims.common.formfields.FormFields.Field;
 import us.mn.state.health.lims.common.services.*;
+import us.mn.state.health.lims.common.services.DisplayListService.ListType;
 import us.mn.state.health.lims.common.services.NoteService.NoteType;
 import us.mn.state.health.lims.common.services.StatusService.AnalysisStatus;
 import us.mn.state.health.lims.common.services.StatusService.OrderStatus;
@@ -365,9 +366,8 @@ public class ResultsLogbookUpdateAction extends BaseAction implements IResultSav
             }
 
             if (testResultItem.isRejected()) {
-                analysisService.getAnalysis().setStatusId(StatusService.getInstance().getStatusID(AnalysisStatus.TechnicalRejected));
                 String rejectedReasonId = testResultItem.getRejectReasonId();
-                for (IdValuePair rejectReason : DisplayListService.createFromDictionaryCategory("resultRejectionReasons", true)) {
+                for (IdValuePair rejectReason : DisplayListService.getList(ListType.REJECTION_REASONS)) {
                     if (rejectedReasonId.equals(rejectReason.getId())) {
                         String reason = rejectReason.getValue();
                         Note rejectNote = noteService.createSavableNote( NoteType.REJECTION_REASON, reason.substring(reason.indexOf(".") + 1), RESULT_SUBJECT, currentUserId);

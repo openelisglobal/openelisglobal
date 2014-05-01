@@ -67,7 +67,8 @@ public class DisplayListService implements LocaleChangeListener {
 		HAITI_DEPARTMENTS,
         PATIENT_SEARCH_CRITERIA,
         PANELS,
-        TESTS
+        TESTS,
+        REJECTION_REASONS
 	}
 
 	private static Map<ListType, List<IdValuePair>> typeToListMap = new HashMap<ListType, List<IdValuePair>>();
@@ -94,6 +95,7 @@ public class DisplayListService implements LocaleChangeListener {
         typeToListMap.put(ListType.PATIENT_SEARCH_CRITERIA, createPatientSearchCriteria());
         typeToListMap.put(ListType.PANELS, createPanelList());
         typeToListMap.put(ListType.TESTS, createTestList());
+        typeToListMap.put(ListType.REJECTION_REASONS,createFromDictionaryCategory("resultRejectionReasons", true));
 
         SystemConfiguration.getInstance().addLocalChangeListener(instance);
 	}
@@ -117,6 +119,7 @@ public class DisplayListService implements LocaleChangeListener {
         typeToListMap.put(ListType.PATIENT_SEARCH_CRITERIA, createPatientSearchCriteria());
         typeToListMap.put(ListType.PANELS, createPanelList());
         dictionaryToListMap = new HashMap<String, List<IdValuePair>>( );
+        typeToListMap.put(ListType.REJECTION_REASONS,createFromDictionaryCategory("resultRejectionReasons", true));
     }
 
     public static List<IdValuePair> getList(ListType listType) {
@@ -208,7 +211,7 @@ public class DisplayListService implements LocaleChangeListener {
 
         return tests;
     }
-	public static List<IdValuePair> createFromDictionaryCategory(String category, boolean addNumbering) {
+	private static List<IdValuePair> createFromDictionaryCategory(String category, boolean addNumbering) {
 		List<IdValuePair> dictionaryList = new ArrayList<IdValuePair>();
 
 		List<Dictionary> dictionaries = new DictionaryDAOImpl().getDictionaryEntrysByCategoryName(category);
