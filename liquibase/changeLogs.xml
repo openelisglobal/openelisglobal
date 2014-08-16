@@ -2188,7 +2188,10 @@ ALTER TABLE sampletracking OWNER TO clinlims;
 		SELECT  r.id FROM result AS r, analyte AS a WHERE a.name = 'generated CD4 Count' AND a.id = r.analyte_id
 	)		
 	</sql>
-</changeSet>
+</changeSet>	
+	
+
+ 
 
 <include file="CILNSPData.xml"/>
 <include file="OE2.7/Schema.xml"/>
