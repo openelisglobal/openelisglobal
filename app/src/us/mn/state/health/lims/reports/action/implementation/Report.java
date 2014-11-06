@@ -125,7 +125,7 @@ public abstract class Report implements IReportCreator {
         localizationMap.put("thanNormal", StringUtil.getMessageForKey( "report.thanNormal" ));
         localizationMap.put("normal", StringUtil.getMessageForKey( "report.normal" ));
         localizationMap.put("extLabReference", StringUtil.getMessageForKey( "report.extLabReference" ));
-        localizationMap.put("confirmText", StringUtil.getMessageForKey( "report.confirmText" ));
+        localizationMap.put("confirmTest", StringUtil.getMessageForKey( "report.confirmTest" ));
         localizationMap.put("serviceHead", StringUtil.getMessageForKey( "report.serviceHead" ));
         localizationMap.put("associateProfessor", StringUtil.getMessageForKey( "report.associateProfessor" ));
         localizationMap.put("assHeadOfBioclinicque", StringUtil.getMessageForKey( "report.assHeadOfBioclinicque" ));
@@ -140,8 +140,49 @@ public abstract class Report implements IReportCreator {
         localizationMap.put("signValidation", StringUtil.getMessageForKey( "report.signValidation" ));
         localizationMap.put("date", StringUtil.getMessageForKey( "report.date" ));
         localizationMap.put("legend", StringUtil.getMessageForKey( "report.legend" ));
-         /* activity report */
+        localizationMap.put("analysisReport", StringUtil.getMessageForKey( "report.analysisReport" ));
+        localizationMap.put("results", StringUtil.getMessageForKey( "report.results" ));
+        /* HIV summary*/
+        localizationMap.put("total", StringUtil.getMessageForKey( "report.total" ));
+        localizationMap.put("children", StringUtil.getMessageForKey( "report.children" ));
+        localizationMap.put("women", StringUtil.getMessageForKey( "report.women" ));
+        localizationMap.put("men", StringUtil.getMessageForKey( "report.men" ));
+        localizationMap.put("population", StringUtil.getMessageForKey( "report.population" ));
+        localizationMap.put("account", StringUtil.getMessageForKey( "report.total" ));
+        localizationMap.put("accounTestsByAgeAndSex", StringUtil.getMessageForKey( "report.accounTestsByAgeAndSex" ));
+        localizationMap.put("positive", StringUtil.getMessageForKey( "report.positive" ));
+        localizationMap.put("accountHivTypeTest", StringUtil.getMessageForKey( "report.accountHivTypeTest" ));
+        localizationMap.put("negative", StringUtil.getMessageForKey( "report.negative" ));
+        localizationMap.put("undetermined", StringUtil.getMessageForKey( "report.undetermined" ));
+        localizationMap.put("percentage", StringUtil.getMessageForKey( "report.percentage" ));
+        localizationMap.put("waiting", StringUtil.getMessageForKey( "report.percentage" ));
+        /*Summary of all Tests*/
+        localizationMap.put("globalLabReport", StringUtil.getMessageForKey( "report.globalLabReport" ));
+        localizationMap.put("notStarted", StringUtil.getMessageForKey( "report.notStarted" ));
+        localizationMap.put("inProgress", StringUtil.getMessageForKey( "report.inProgress" ));
+        localizationMap.put("complete", StringUtil.getMessageForKey( "report.complete" ));
+        localizationMap.put("footNote", StringUtil.getMessageForKey( "report.footNote" ));
+        localizationMap.put("labTotal", StringUtil.getMessageForKey( "report.labTotal" ));
+        /*Referred Test reports*/
+        localizationMap.put("orderNo", StringUtil.getMessageForKey( "report.orderNo" ));
+        localizationMap.put("referredTest", StringUtil.getMessageForKey( "report.referredTest" ));
+        localizationMap.put("referredResult", StringUtil.getMessageForKey( "report.referredResult" ));
+        localizationMap.put("other", StringUtil.getMessageForKey( "report.other" ));
+        localizationMap.put("report", StringUtil.getMessageForKey( "report.report" ));
+        localizationMap.put("reason", StringUtil.getMessageForKey( "report.reason" ));
+        localizationMap.put("reception", StringUtil.getMessageForKey( "report.reception" ));
+        /* activity report */
         localizationMap.put("activity", StringUtil.getMessageForKey( "report.activity" ));
+        localizationMap.put("from", StringUtil.getMessageForKey( "report.from" ));
+        localizationMap.put("to", StringUtil.getMessageForKey( "report.to" ));
+        localizationMap.put("printed", StringUtil.getMessageForKey( "report.printed" ));
+        localizationMap.put("techId", StringUtil.getMessageForKey( "report.techId" ));
+        localizationMap.put("collection", StringUtil.getMessageForKey( "report.collection" ));
+        localizationMap.put("patientNameCode", StringUtil.getMessageForKey( "report.patientNameCode" ));
+        localizationMap.put("status", StringUtil.getMessageForKey( "report.status" ));
+        localizationMap.put("testName", StringUtil.getMessageForKey( "report.testName" ));
+        localizationMap.put("dateFormat", StringUtil.getMessageForKey( "report.dateFormat" ));
+        localizationMap.put("dateReviewedReceived", StringUtil.getMessageForKey( "report.dateReviewedReceived" ));
      
         return localizationMap;
     }
