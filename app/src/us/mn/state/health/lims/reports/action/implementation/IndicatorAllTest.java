@@ -63,7 +63,7 @@ public abstract class IndicatorAllTest extends IndicatorReport implements IRepor
 
 	@Override
 	protected String reportFileName() {
-		return "HaitiLabAggregate";
+		return "LabAggregate";// previously returning HaitiLabAggregate whose name has changed to LabAggregate
 	}
 
 	public JRDataSource getReportDataSource() throws IllegalStateException {

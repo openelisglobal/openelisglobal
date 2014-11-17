@@ -183,7 +183,27 @@ public abstract class Report implements IReportCreator {
         localizationMap.put("testName", StringUtil.getMessageForKey( "report.testName" ));
         localizationMap.put("dateFormat", StringUtil.getMessageForKey( "report.dateFormat" ));
         localizationMap.put("dateReviewedReceived", StringUtil.getMessageForKey( "report.dateReviewedReceived" ));
-     
+        /* Non Conformity by group/date */
+        localizationMap.put("supervisorSign", StringUtil.getMessageForKey( "report.supervisorSign" ));
+        localizationMap.put("for", StringUtil.getMessageForKey( "report.for" ));
+        localizationMap.put("comments", StringUtil.getMessageForKey( "report.comments" ));
+        localizationMap.put("biologist", StringUtil.getMessageForKey( "report.biologist" ));
+        localizationMap.put("typeOfSample", StringUtil.getMessageForKey( "report.typeOfSample" ));
+        localizationMap.put("reasonForRejection", StringUtil.getMessageForKey( "report.reasonForRejection" ));
+        localizationMap.put("section", StringUtil.getMessageForKey( "report.section" ));
+        localizationMap.put("service", StringUtil.getMessageForKey( "report.service" ));
+        localizationMap.put("study", StringUtil.getMessageForKey( "report.study" ));
+        localizationMap.put("siteSubjectNo", StringUtil.getMessageForKey( "report.siteSubjectNo" ));
+        localizationMap.put("subjectNo", StringUtil.getMessageForKey( "report.subjectNo" ));
+        /* Validation Report */
+        localizationMap.put("validationReport", StringUtil.getMessageForKey("report.validationReport"));
+        localizationMap.put("testSection", StringUtil.getMessageForKey("report.testSection"));
+        localizationMap.put("labManager", StringUtil.getMessageForKey("report.labManager"));
+        /* Workplan by text ### the parameters are declared in src/us/mn/state/health/lims/workplan/reports/TestWorkplanReport.java*/
+        /* Workplan by section and bench ### these parameter below are declared in src/us/mn/state/health/lims/workplan/reports/TestSectionWorkplanReport.java*/
+        /*No Report report*/
+        localizationMap.put("noReportMessage", StringUtil.getMessageForKey("report.noReportMessage"));
+        
         return localizationMap;
     }
 

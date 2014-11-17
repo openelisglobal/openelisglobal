@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestWorkplanReport implements IWorkplanReport {
 
@@ -55,14 +56,18 @@ public class TestWorkplanReport implements IWorkplanReport {
 		parameterMap.put("nameOfPatient", getNameOfPatient());
 		parameterMap.put("labName", ConfigurationProperties.getInstance().getPropertyValue(Property.SiteName));
 		parameterMap.put("siteLogo", getSiteLogo());
-        parameterMap.put("accessionPrefix", AccessionNumberUtil.getAccessionNumberValidator().getPrefix() );
-        parameterMap.put("prefixLength", PREFIX_LENGTH );
+                parameterMap.put("accessionPrefix", AccessionNumberUtil.getAccessionNumberValidator().getPrefix() );
+                parameterMap.put("prefixLength", PREFIX_LENGTH );
 		parameterMap.put("SUBREPORT_DIR", reportPath);
+                //parameterMap.put("localization", createLocalizationMap());// for report localization
+                parameterMap.put("receptionDate", StringUtil.getMessageForKey("report.receptionDate"));
+                parameterMap.put("workPlan", StringUtil.getMessageForKey("report.workPlan"));
+                parameterMap.put("appointmentDate", StringUtil.getMessageForKey("report.appointmentDate"));
 		
 		return parameterMap;	
 	
 	}
-	
+                
    protected String getSiteLogo(){
         if( ConfigurationProperties.getInstance().isPropertyValueEqual(Property.configurationName, "Haiti LNSP")){
             return "images" + File.separator + "HaitiLNSP.jpg";   

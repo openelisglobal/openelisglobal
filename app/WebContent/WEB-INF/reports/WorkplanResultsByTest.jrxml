@@ -24,6 +24,7 @@
 	<parameter name="prefixLength" class="java.lang.Integer" isForPrompting="false">
 		<defaultValueExpression><![CDATA[0]]></defaultValueExpression>
 	</parameter>
+        <parameter name="localization" class="java.util.Map" isForPrompting="false"/>
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -51,7 +52,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA["Plan de Travail: " + $P{testName}]]></textFieldExpression>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{localization}.get("workPlan")+": " + $P{testName}]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
 				<reportElement key="textField" x="440" y="6" width="110" height="20"/>

@@ -117,7 +117,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="12"/>
 				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA["De " + $P{startDate} + " à " + $P{stopDate}]]></textFieldExpression>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{localization}.get("from")+" " + $P{startDate} + " "+$P{localization}.get("to")+ " " + $P{stopDate}]]></textFieldExpression>
 			</textField>
 			<line>
 				<reportElement x="0" y="311" width="572" height="1"/>

@@ -17,6 +17,7 @@
 		<defaultValueExpression><![CDATA["C:\\Tomcat 5.5\\webapps\\openElisGlobal\\WEB-INF\\reports\\"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="directorName" class="java.lang.String" isForPrompting="false"/>
+        <parameter name="localization" class="java.util.Map" isForPrompting="false"/>
 	<field name="accessionNumber" class="java.lang.String"/>
 	<field name="subjectNumber" class="java.lang.String"/>
 	<field name="siteSubjectNumber" class="java.lang.String"/>
@@ -36,13 +37,13 @@
 		<groupExpression><![CDATA[$F{accessionNumber}]]></groupExpression>
 		<groupHeader>
 			<band height="180">
-				<staticText>
+				<textField>
 					<reportElement key="staticText" positionType="FixRelativeToBottom" mode="Opaque" x="409" y="148" width="107" height="20" backcolor="#CCCCCC"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font size="11" isBold="true" isItalic="true"/>
 					</textElement>
-					<text><![CDATA[Biologiste ]]></text>
-				</staticText>
+                                        <textFieldExpression class="java.lang.String"> <![CDATA[$P{localization}.get("biologist")]]></textFieldExpression>
+                                </textField>
 				<rectangle>
 					<reportElement x="0" y="149" width="555" height="25" backcolor="#CCCCCC"/>
 				</rectangle>
