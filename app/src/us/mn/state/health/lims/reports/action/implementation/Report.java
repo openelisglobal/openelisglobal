@@ -41,7 +41,7 @@ import static org.apache.commons.validator.GenericValidator.isBlankOrNull;
 public abstract class Report implements IReportCreator {
     
     public static final String CI_ERROR_REPORT = "NoticeOfReportError";
-    public static final String HAITI_ERROR_REPORT = "HaitiNoticeOfReportError";
+    public static final String HAITI_ERROR_REPORT = "NoticeOfReportError";//changed name from HaitiNoticeOfReportError
     
 	protected static final String CSV = "csv";
 

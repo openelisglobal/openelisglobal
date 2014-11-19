@@ -3,42 +3,21 @@
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<parameter name="studyName" class="java.lang.String"/>
-	<parameter name="directorName" class="java.lang.String"/>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String">
-		<defaultValueExpression><![CDATA["c:/Tomcat 5.5/webapps/openElisGlobal/WEB-INF/reports/"]]></defaultValueExpression>
+		<defaultValueExpression><![CDATA["c:/Tomcat 5.5/webapps/haitiOpenElis/WEB-INF/reports/"]]></defaultValueExpression>
 	</parameter>
         <parameter name="localization" class="java.util.Map" isForPrompting="false"/>
-	<field name="msgLine1" class="java.lang.String"/>
+        <field name="msgLine1" class="java.lang.String"/>
 	<field name="msgLine2" class="java.lang.String"/>
 	<field name="msgLine3" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="79" splitType="Stretch">
-			<subreport>
-				<reportElement x="0" y="0" width="572" height="79"/>
-				<subreportParameter name="SUBREPORT_DIR">
-					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="studyName">
-					<subreportParameterExpression><![CDATA[$P{studyName}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="directorName">
-					<subreportParameterExpression><![CDATA[$P{directorName}]]></subreportParameterExpression>
-				</subreportParameter>
-				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
-				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "RetroCIHeader.jasper"]]></subreportExpression>
-			</subreport>
-		</band>
+		<band height="2" splitType="Stretch"/>
 	</title>
 	<pageHeader>
-		<band height="35" splitType="Stretch">
-			<line>
-				<reportElement x="0" y="17" width="572" height="1"/>
-			</line>
-		</band>
+		<band height="3" splitType="Stretch"/>
 	</pageHeader>
 	<columnHeader>
 		<band height="61" splitType="Stretch">
@@ -55,17 +34,17 @@
 		<band height="125" splitType="Stretch">
 			<textField>
 				<reportElement x="0" y="0" width="572" height="20"/>
-				<textElement/>
+				<textElement textAlignment="Center"/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{msgLine1}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="0" y="23" width="572" height="20"/>
-				<textElement/>
+				<reportElement x="0" y="20" width="572" height="20"/>
+				<textElement textAlignment="Center"/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{msgLine2}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="0" y="46" width="572" height="20"/>
-				<textElement/>
+				<textElement textAlignment="Center"/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{msgLine3}]]></textFieldExpression>
 			</textField>
 		</band>
