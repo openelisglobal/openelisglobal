@@ -31,7 +31,7 @@ import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.patient.saving.Accessioner;
 
 /**
- * Action for Côte d'Ivoire study based patient entry.
+ * Action for Cote d'Ivoire study based patient entry.
  * @author pahill
  * @since 2010-04-16
  */

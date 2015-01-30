@@ -28,7 +28,7 @@ import us.mn.state.health.lims.login.valueholder.UserSessionData;
 import us.mn.state.health.lims.patient.saving.*;
 
 /***
- * Action controller for Côte d'Ivoire 
+ * Action controller for Cote d'Ivoire 
  * @author pahill
  * @since 2010-04-12
  */

@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 
 /**
- * Action for Côte d'Ivoire study based patient edit.
+ * Action for Cote d'Ivoire study based patient edit.
  * @author pahill
  * @since 2010-04-16
  */

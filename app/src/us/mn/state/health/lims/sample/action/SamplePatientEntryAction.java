@@ -49,7 +49,7 @@ public class SamplePatientEntryAction extends BaseSampleEntryAction {
 
 		BaseActionForm dynaForm = (BaseActionForm) form;
 
-		dynaForm.initialize(mapping);
+		// dynaForm.initialize(mapping);
 
         SampleOrderService sampleOrderService = new SampleOrderService();
         PropertyUtils.setProperty( dynaForm, "sampleOrderItems", sampleOrderService.getSampleOrderItem() );
@@ -57,9 +57,13 @@ public class SamplePatientEntryAction extends BaseSampleEntryAction {
         PropertyUtils.setProperty( dynaForm, "patientSearch", new PatientSearch() );
 		PropertyUtils.setProperty(dynaForm, "sampleTypes", DisplayListService.getList(ListType.SAMPLE_TYPE_ACTIVE));
 		PropertyUtils.setProperty(dynaForm, "testSectionList", DisplayListService.getList(ListType.TEST_SECTION));
-        PropertyUtils.setProperty( dynaForm, "currentDate", DateUtil.getCurrentDateAsText());
-
+		PropertyUtils.setProperty(dynaForm, "qaEventTypes", DisplayListService.getList(ListType.QA_EVENTS));
+		PropertyUtils.setProperty( dynaForm, "currentDate", DateUtil.getCurrentDateAsText());
+		
+        
 		addProjectList( dynaForm );
+		
+        
 
 		if (FormFields.getInstance().useField(FormFields.Field.InitialSampleCondition)) {
 			PropertyUtils.setProperty(dynaForm, "initialSampleConditionList", DisplayListService.getList(ListType.INITIAL_SAMPLE_CONDITION));
