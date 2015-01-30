@@ -26,7 +26,7 @@ import us.mn.state.health.lims.sample.valueholder.Sample;
 import java.util.List;
 
 /**
- * Record of survey/interview questions.  First used for Côte d'Ivoire RetroCI Study forms.
+ * Record of survey/interview questions.  First used for Cote d'Ivoire RetroCI Study forms.
  * @author pahill
  * @since 2010-04-16
  */

@@ -23,7 +23,7 @@ import us.mn.state.health.lims.common.valueholder.SimpleBaseEntity;
 /**
  * Entities which represent facts about a patient and a sample that has entered the lab.
  * Often taken from a demographic survey form filled out by the doctor, but sometimes something which is generated in the lab like various statuses of a sample.
- * Originally for Côte d'Ivoire RetroCI Project
+ * Originally for Cote d'Ivoire RetroCI Project
  * @author Paul A. Hill
  * @since 2010-04-16
  */
