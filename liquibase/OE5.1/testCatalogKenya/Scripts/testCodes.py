@@ -8,11 +8,11 @@ test_name = []
 sample_type = []
 handled_descriptions = ['']
 
-test_file = open("input_files/testName.txt")
-sample_file = open("input_files/sampleType.txt")
-analyze_file = open("input_files/analyzeCode.txt")
-billing_file = open("input_files/billingCode.txt")
-result = open("output_files/testCodeResult.sql",'w')
+test_file = open("testName.txt")
+sample_file = open("sampleType.txt")
+analyze_file = open("analyzeCode.txt")
+billing_file = open("billingCode.txt")
+result = open("output/testCodeResult.sql",'w')
 
 def esc_char(name):
     if "'" in name:

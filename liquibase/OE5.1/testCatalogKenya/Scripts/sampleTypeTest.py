@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-#existing_types = []
+existing_types = []
 
 def get_split_names( name ):
     split_name_list = name.split("/")
@@ -17,10 +17,10 @@ type = []
 test_names = []
 descriptions = []
 
-sample_type_file = open("input_files/sampleType.txt")
-name_file = open('input_files/testName.txt','r')
-#existing_types_file = open("input_files/currentSampleTypes.txt")
-results = open("output_files/sampleTypeTestResults.txt", 'w')
+sample_type_file = open("sampleType.txt")
+name_file = open('testName.txt','r')
+existing_types_file = open("currentSampleTypes.txt")
+results = open("output/sampleTypeTestResults.txt", 'w')
 
 def esc_char(name):
     if "'" in name:
@@ -60,20 +60,20 @@ for line in name_file:
 name_file.close()
 
 
-#for line in existing_types_file:
-#    if len(line) > 0:
-#        existing_types.append(line.strip())
+for line in existing_types_file:
+    if len(line) > 0:
+        existing_types.append(line.strip())
 
-#existing_types_file.close()
+existing_types_file.close()
 for row in range(0, len(test_names)):
     if len(test_names[row]) > 1:
                 description = create_description(test_names[row], type[row] )
-                test_select = " (select id from clinlims.test where description = " + esc_char(description) + " ) "
-                sample_select = "  (select id from clinlims.type_of_sample where description = '" + clean_sample_type(type[row]) + "') "
+                test_select = " (select id from test where description = " + esc_char(description) + " ) "
+                sample_select = "  (select id from type_of_sample where description = '" + clean_sample_type(type[row]) + "') "
                 if description not in descriptions:
                     results.write("DELETE from clinlims.sampletype_test where test_id = " + test_select + " and sample_type_id =" + sample_select + ";\n" )
                     results.write("INSERT INTO clinlims.sampletype_test (id, test_id , sample_type_id) VALUES \n")
-                    results.write("\t(nextval( 'clinlims.sample_type_test_seq' ) ," + test_select + " ,  " + sample_select + " );\n")
+                    results.write("\t(nextval( 'sample_type_test_seq' ) ," + test_select + " ,  " + sample_select + " );\n")
                     descriptions.append(description)
 
 
